@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Decide — A clearer head for tough choices</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --sand: #F5F0E8;
+    --sand-mid: #EDE6D6;
+    --sand-dark: #D4C9B0;
+    --ink: #1A1612;
+    --ink-mid: #4A4440;
+    --ink-light: #8A8078;
+    --moss: #3D5A47;
+    --moss-light: #EAF0EC;
+    --rust: #9B3A2A;
+    --rust-light: #F5EAE8;
+    --sky: #2A4A6B;
+    --sky-light: #E8EEF5;
+    --amber: #B06A20;
+    --amber-light: #F5EDE0;
+    --radius: 10px;
+    --radius-sm: 6px;
+  }
+
+  html { font-size: 16px; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--sand);
+    color: var(--ink);
+    min-height: 100vh;
+    padding: 2rem 1rem 4rem;
+  }
+
+  .container {
+    max-width: 640px;
+    margin: 0 auto;
+  }
+
+  /* Header */
+  .app-header {
+    text-align: center;
+    margin-bottom: 3rem;
+    padding-top: 1rem;
+  }
+  .app-header .wordmark {
+    font-family: 'Lora', serif;
+    font-size: 28px;
+    font-weight: 400;
+    letter-spacing: -0.5px;
+    color: var(--ink);
+  }
+  .app-header .tagline {
+    font-size: 13px;
+    color: var(--ink-light);
+    margin-top: 4px;
+    letter-spacing: 0.5px;
+  }
+
+  /* Progress */
+  .progress-bar {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin-bottom: 2.5rem;
+    position: relative;
+  }
+  .prog-step {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    position: relative;
+    z-index: 1;
+  }
+  .prog-dot {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    border: 2px solid var(--sand-dark);
+    background: var(--sand);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 500; color: var(--ink-light);
+    transition: all 0.3s;
+  }
+  .prog-step.done .prog-dot {
+    background: var(--moss); border-color: var(--moss); color: white;
+  }
+  .prog-step.current .prog-dot {
+    background: var(--ink); border-color: var(--ink); color: white;
+  }
+  .prog-label {
+    font-size: 10px; color: var(--ink-light); letter-spacing: 0.3px;
+    text-align: center; white-space: nowrap;
+  }
+  .prog-step.done .prog-label, .prog-step.current .prog-label {
+    color: var(--ink-mid);
+  }
+  .prog-line {
+    position: absolute;
+    top: 14px; left: 14px; right: 14px;
+    height: 2px;
+    background: var(--sand-dark);
+    z-index: 0;
+  }
+  .prog-line-fill {
+    height: 100%;
+    background: var(--moss);
+    transition: width 0.4s ease;
+  }
+
+  /* Cards / Panels */
+  .panel {
+    background: white;
+    border-radius: var(--radius);
+    padding: 2rem;
+    border: 1px solid var(--sand-dark);
+    margin-bottom: 1rem;
+    animation: fadeIn 0.3s ease;
+  }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  .panel-title {
+    font-family: 'Lora', serif;
+    font-size: 22px;
+    font-weight: 400;
+    line-height: 1.3;
+    margin-bottom: 6px;
+  }
+  .panel-sub {
+    font-size: 14px;
+    color: var(--ink-light);
+    line-height: 1.6;
+    margin-bottom: 1.75rem;
+  }
+
+  /* Form elements */
+  .field { margin-bottom: 1.25rem; }
+  .field-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--ink-mid);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .field-hint {
+    font-size: 12px;
+    color: var(--ink-light);
+    margin-top: 4px;
+  }
+  input[type=text], textarea {
+    width: 100%;
+    padding: 10px 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    border: 1.5px solid var(--sand-dark);
+    border-radius: var(--radius-sm);
+    background: var(--sand);
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.2s, background 0.2s;
+    resize: vertical;
+  }
+  input[type=text]:focus, textarea:focus {
+    border-color: var(--ink-mid);
+    background: white;
+  }
+  textarea { min-height: 80px; line-height: 1.55; }
+
+  /* Buttons */
+  .btn-row { display: flex; gap: 8px; margin-top: 1.5rem; flex-wrap: wrap; }
+  .btn {
+    padding: 10px 20px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all 0.15s;
+    border: 1.5px solid transparent;
+  }
+  .btn-primary {
+    background: var(--ink);
+    color: white;
+    border-color: var(--ink);
+  }
+  .btn-primary:hover { background: var(--ink-mid); border-color: var(--ink-mid); }
+  .btn-secondary {
+    background: transparent;
+    color: var(--ink-mid);
+    border-color: var(--sand-dark);
+  }
+  .btn-secondary:hover { background: var(--sand); }
+  .btn-ghost {
+    background: transparent;
+    color: var(--ink-light);
+    border-color: transparent;
+    padding-left: 8px;
+  }
+  .btn-ghost:hover { color: var(--ink-mid); }
+
+  /* Option tabs */
+  .opt-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 1.5rem; }
+  .opt-tab {
+    padding: 12px 16px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1.5px solid var(--sand-dark);
+    background: var(--sand);
+    color: var(--ink-light);
+    text-align: left;
+  }
+  .opt-tab .tab-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 2px; }
+  .opt-tab.active {
+    background: var(--ink);
+    color: white;
+    border-color: var(--ink);
+  }
+  .opt-tab.active .tab-label { color: rgba(255,255,255,0.6); }
+
+  /* Scenario type selector */
+  .type-selector { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 1.5rem; }
+  .type-btn {
+    padding: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1.5px solid var(--sand-dark);
+    background: var(--sand);
+    color: var(--ink-mid);
+    text-align: center;
+  }
+  .type-btn .type-icon { font-size: 18px; display: block; margin-bottom: 4px; }
+  .type-btn.active-opp {
+    background: var(--moss-light);
+    color: var(--moss);
+    border-color: var(--moss);
+  }
+  .type-btn.active-threat {
+    background: var(--rust-light);
+    color: var(--rust);
+    border-color: var(--rust);
+  }
+
+  /* Sliders */
+  .slider-field { margin-bottom: 1.25rem; }
+  .slider-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+  .slider-name { font-size: 12px; font-weight: 500; color: var(--ink-mid); text-transform: uppercase; letter-spacing: 0.5px; }
+  .slider-reading { font-family: 'Lora', serif; font-size: 16px; color: var(--ink); }
+  .slider-ends { display: flex; justify-content: space-between; font-size: 11px; color: var(--ink-light); margin-top: 4px; }
+  input[type=range] {
+    width: 100%;
+    -webkit-appearance: none;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--sand-dark);
+    outline: none;
+    cursor: pointer;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: var(--ink);
+    border: 3px solid white;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+    cursor: pointer;
+  }
+  input[type=range]::-moz-range-thumb {
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: var(--ink);
+    border: 3px solid white;
+    cursor: pointer;
+  }
+
+  /* Risk cards */
+  .risk-list { margin-top: 1rem; display: flex; flex-direction: column; gap: 8px; }
+  .risk-card {
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    border: 1px solid var(--sand-dark);
+    background: var(--sand);
+    position: relative;
+  }
+  .risk-card.opp { border-left: 3px solid var(--moss); background: var(--moss-light); }
+  .risk-card.threat { border-left: 3px solid var(--rust); background: var(--rust-light); }
+  .risk-card-top { display: flex; gap: 8px; align-items: flex-start; justify-content: space-between; }
+  .risk-badge {
+    font-size: 10px; font-weight: 500; padding: 2px 8px;
+    border-radius: 20px; text-transform: uppercase; letter-spacing: 0.3px; white-space: nowrap;
+  }
+  .risk-badge.opp { background: var(--moss); color: white; }
+  .risk-badge.threat { background: var(--rust); color: white; }
+  .risk-desc { font-size: 14px; color: var(--ink); line-height: 1.45; flex: 1; }
+  .risk-meta { font-size: 12px; color: var(--ink-light); margin-top: 6px; }
+  .risk-mit { font-size: 12px; color: var(--ink-mid); margin-top: 6px; font-style: italic; }
+  .delete-x {
+    background: none; border: none; cursor: pointer; font-size: 16px;
+    color: var(--ink-light); padding: 0 0 0 8px; line-height: 1;
+  }
+  .delete-x:hover { color: var(--rust); }
+  .empty-hint { text-align: center; padding: 1.5rem; color: var(--ink-light); font-size: 13px; border: 1.5px dashed var(--sand-dark); border-radius: var(--radius-sm); }
+
+  /* Add scenario mini-form */
+  .add-form {
+    background: var(--sand);
+    border: 1px solid var(--sand-dark);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    margin-top: 1.5rem;
+  }
+  .add-form-title {
+    font-size: 13px; font-weight: 500; color: var(--ink-mid);
+    margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.5px;
+  }
+
+  /* Report */
+  .report-hero {
+    background: var(--ink);
+    color: white;
+    border-radius: var(--radius);
+    padding: 2rem;
+    margin-bottom: 1rem;
+  }
+  .report-hero .hero-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; opacity: 0.6; margin-bottom: 8px; }
+  .report-hero .hero-winner {
+    font-family: 'Lora', serif;
+    font-size: 30px;
+    font-weight: 400;
+    margin-bottom: 10px;
+    line-height: 1.2;
+  }
+  .report-hero .hero-reason { font-size: 14px; opacity: 0.8; line-height: 1.65; }
+
+  .compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1rem; }
+  .compare-card {
+    background: white;
+    border: 1px solid var(--sand-dark);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+  }
+  .compare-card.winning { border-color: var(--moss); border-width: 2px; }
+  .compare-card .cc-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--ink-light); margin-bottom: 4px; }
+  .compare-card .cc-name { font-family: 'Lora', serif; font-size: 17px; font-weight: 400; margin-bottom: 12px; }
+  .cc-stat { display: flex; justify-content: space-between; font-size: 13px; padding: 5px 0; border-bottom: 1px solid var(--sand-mid); }
+  .cc-stat:last-child { border-bottom: none; font-weight: 500; }
+  .cc-stat .cc-stat-label { color: var(--ink-light); }
+  .val-pos { color: var(--moss); }
+  .val-neg { color: var(--rust); }
+  .val-net-pos { color: var(--sky); }
+  .val-net-neg { color: var(--amber); }
+
+  .section-title {
+    font-family: 'Lora', serif;
+    font-size: 17px;
+    font-weight: 400;
+    margin-bottom: 1rem;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--sand-dark);
+  }
+
+  .bar-row { margin-bottom: 14px; }
+  .bar-meta { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 5px; }
+  .bar-meta .bar-name { color: var(--ink-mid); }
+  .bar-meta .bar-pts { font-weight: 500; color: var(--ink); }
+  .bar-track { height: 8px; background: var(--sand-dark); border-radius: 4px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 4px; transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
+  .bar-opp { background: var(--moss); }
+  .bar-threat { background: var(--rust); }
+
+  .step-hidden { display: none; }
+
+  .divider { border: none; border-top: 1px solid var(--sand-dark); margin: 1.5rem 0; }
+
+  .opt-section-header {
+    font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px;
+    color: var(--ink-light); margin: 1.25rem 0 8px;
+  }
+
+  @media (max-width: 500px) {
+    .panel { padding: 1.25rem; }
+    .compare-grid { grid-template-columns: 1fr; }
+    .prog-label { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="app-header">
+    <div class="wordmark">decide.</div>
+    <div class="tagline">A clearer head for tough choices</div>
+  </div>
+
+  <!-- Progress -->
+  <div style="position:relative; margin-bottom:2.5rem;">
+    <div class="prog-line"><div class="prog-line-fill" id="progLineFill"></div></div>
+    <div class="progress-bar">
+      <div class="prog-step" id="dot1">
+        <div class="prog-dot">1</div>
+        <div class="prog-label">The decision</div>
+      </div>
+      <div class="prog-step" id="dot2">
+        <div class="prog-dot">2</div>
+        <div class="prog-label">Your options</div>
+      </div>
+      <div class="prog-step" id="dot3">
+        <div class="prog-dot">3</div>
+        <div class="prog-label">What could happen</div>
+      </div>
+      <div class="prog-step" id="dot4">
+        <div class="prog-dot">4</div>
+        <div class="prog-label">The picture</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 1 -->
+  <div id="step1">
+    <div class="panel">
+      <h1 class="panel-title">What decision are you facing?</h1>
+      <p class="panel-sub">Take a moment. Describe what's on your mind — no wrong way to say it.</p>
+
+      <div class="field">
+        <label class="field-label">Describe the decision</label>
+        <textarea id="decisionDesc" placeholder="e.g. I'm trying to decide whether to leave my current job for a new opportunity, or stay and wait for a promotion I've been promised..."></textarea>
+      </div>
+      <div class="field">
+        <label class="field-label">Why is this decision on your mind right now?</label>
+        <textarea id="decisionWhy" placeholder="e.g. I've been feeling stuck for months, and I just got an offer from another company..."></textarea>
+      </div>
+      <div class="field">
+        <label class="field-label">What's the one most important thing you want to achieve?</label>
+        <input type="text" id="mainGoal" placeholder="e.g. Financial security, career growth, better work-life balance..." />
+      </div>
+      <div class="field">
+        <label class="field-label">Anything else that matters — even a little?</label>
+        <input type="text" id="secondaryGoals" placeholder="e.g. Being closer to family, keeping current friendships, learning new skills..." />
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="goStep(2)">Continue →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 2 -->
+  <div id="step2" class="step-hidden">
+    <div class="panel">
+      <h1 class="panel-title">What are your two options?</h1>
+      <p class="panel-sub">Give each a short name you'll recognize, and briefly describe what it actually means for your life.</p>
+
+      <div class="field">
+        <label class="field-label">Option A — short name</label>
+        <input type="text" id="optAName" placeholder="e.g. Take the new job" />
+      </div>
+      <div class="field">
+        <label class="field-label">What does Option A actually mean for you?</label>
+        <textarea id="optADesc" placeholder="e.g. Leave my current company, join a 50-person startup at a higher salary, but with more uncertainty..."></textarea>
+      </div>
+
+      <hr class="divider" style="margin: 1.25rem 0;">
+
+      <div class="field">
+        <label class="field-label">Option B — short name</label>
+        <input type="text" id="optBName" placeholder="e.g. Stay and wait" />
+      </div>
+      <div class="field">
+        <label class="field-label">What does Option B actually mean for you?</label>
+        <textarea id="optBDesc" placeholder="e.g. Stay in my current role, keep my salary, and wait to see if the promotion comes through by Q3..."></textarea>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-secondary" onclick="goStep(1)">← Back</button>
+        <button class="btn btn-primary" onclick="goStep(3)">Continue →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 3 -->
+  <div id="step3" class="step-hidden">
+    <div class="panel">
+      <h1 class="panel-title">What could happen?</h1>
+      <p class="panel-sub" id="step3Sub">Think through each option. What could go right, and what could go wrong?</p>
+
+      <div class="opt-tabs">
+        <button class="opt-tab active" id="tabA" onclick="switchOpt('A')">
+          <span class="tab-label">Option A</span>
+          <span id="tabAName">—</span>
+        </button>
+        <button class="opt-tab" id="tabB" onclick="switchOpt('B')">
+          <span class="tab-label">Option B</span>
+          <span id="tabBName">—</span>
+        </button>
+      </div>
+
+      <!-- Risk list per option -->
+      <div id="listA">
+        <div class="empty-hint" id="emptyA">No scenarios added yet for this option. Use the form below to add one.</div>
+        <div class="risk-list" id="riskListA"></div>
+      </div>
+      <div id="listB" style="display:none">
+        <div class="empty-hint" id="emptyB">No scenarios added yet for this option. Use the form below to add one.</div>
+        <div class="risk-list" id="riskListB"></div>
+      </div>
+
+      <!-- Add scenario form -->
+      <div class="add-form">
+        <div class="add-form-title">Add a scenario</div>
+
+        <div class="type-selector">
+          <button class="type-btn active-opp" id="typeOpp" onclick="setType('opportunity')">
+            <span class="type-icon">✦</span>
+            Something good
+          </button>
+          <button class="type-btn" id="typeThreat" onclick="setType('threat')">
+            <span class="type-icon">⚡</span>
+            Something bad
+          </button>
+        </div>
+
+        <div class="field">
+          <label class="field-label" id="scenLabel">Describe the opportunity</label>
+          <textarea id="riskDesc" rows="2" placeholder="e.g. I might discover a talent I didn't know I had and grow faster than expected..."></textarea>
+        </div>
+
+        <div class="slider-field">
+          <div class="slider-top">
+            <span class="slider-name">How likely is this?</span>
+            <span class="slider-reading" id="probReading">Possible</span>
+          </div>
+          <input type="range" min="1" max="5" value="3" step="1" id="riskProb" oninput="updateReading(this,'probReading',probLabels)">
+          <div class="slider-ends"><span>Very unlikely</span><span>Very likely</span></div>
+        </div>
+
+        <div class="slider-field">
+          <div class="slider-top">
+            <span class="slider-name" id="impactSliderLabel">How good would this be?</span>
+            <span class="slider-reading" id="impactReading">Significant</span>
+          </div>
+          <input type="range" min="1" max="5" value="3" step="1" id="riskImpact" oninput="updateReading(this,'impactReading',impactLabels)">
+          <div class="slider-ends"><span>Minor</span><span>Life-changing</span></div>
+        </div>
+
+        <div class="field">
+          <label class="field-label">Anything you could do about it? <span style="font-weight:300;text-transform:none;letter-spacing:0;font-size:11px;color:var(--ink-light);">optional</span></label>
+          <input type="text" id="riskMit" placeholder="e.g. Negotiate a 3-month notice period as a safety net...">
+          <div class="field-hint">A way to make this more or less likely, or to change how much it affects you</div>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="addScenario()">Add this scenario</button>
+        </div>
+      </div>
+
+      <div class="btn-row" style="margin-top:1.5rem;">
+        <button class="btn btn-secondary" onclick="goStep(2)">← Back</button>
+        <button class="btn btn-primary" onclick="goStep(4)">See the full picture →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 4: Report -->
+  <div id="step4" class="step-hidden">
+
+    <div class="report-hero" id="recHero"></div>
+
+    <div class="compare-grid" id="compareGrid"></div>
+
+    <div class="panel">
+      <div class="section-title">Upside potential vs. downside exposure</div>
+      <div id="barsSection"></div>
+    </div>
+
+    <div class="panel">
+      <div class="section-title">Every scenario, in detail</div>
+      <div id="detailSection"></div>
+    </div>
+
+    <div class="btn-row" style="margin-top:0.5rem;">
+      <button class="btn btn-secondary" onclick="goStep(3)">← Adjust scenarios</button>
+      <button class="btn btn-ghost" onclick="window.print()">Print / save as PDF</button>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+let currentStep = 1;
+let currentOpt = 'A';
+let currentType = 'opportunity';
+let risks = { A: [], B: [] };
+
+const probLabels = ['','Very unlikely','Unlikely','Possible','Likely','Very likely'];
+const impactLabels = ['','Minor','Noticeable','Significant','Major','Life-changing'];
+
+function updateDots(step) {
+  for (let i = 1; i <= 4; i++) {
+    const el = document.getElementById('dot' + i);
+    el.classList.remove('done','current');
+    if (i < step) el.classList.add('done');
+    if (i === step) el.classList.add('current');
+  }
+  const fill = document.getElementById('progLineFill');
+  fill.style.width = ((step - 1) / 3 * 100) + '%';
+}
+
+function goStep(n) {
+  if (n === 2) {
+    if (!v('decisionDesc') || !v('decisionWhy') || !v('mainGoal')) {
+      alert('Please fill in the decision description, the reason, and your main goal.');
+      return;
+    }
+  }
+  if (n === 3) {
+    if (!v('optAName') || !v('optBName')) {
+      alert('Please name both options before continuing.');
+      return;
+    }
+    document.getElementById('tabAName').textContent = v('optAName');
+    document.getElementById('tabBName').textContent = v('optBName');
+    const optA = v('optAName'), optB = v('optBName');
+    document.getElementById('step3Sub').textContent = `Think about "${optA}" vs "${optB}". Add what could go right — and what could go wrong — for each.`;
+  }
+  if (n === 4) buildReport();
+
+  document.getElementById('step' + currentStep).classList.add('step-hidden');
+  document.getElementById('step' + n).classList.remove('step-hidden');
+  currentStep = n;
+  updateDots(n);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function v(id) { return (document.getElementById(id)?.value || '').trim(); }
+
+function switchOpt(opt) {
+  currentOpt = opt;
+  document.getElementById('tabA').classList.toggle('active', opt === 'A');
+  document.getElementById('tabB').classList.toggle('active', opt === 'B');
+  document.getElementById('listA').style.display = opt === 'A' ? '' : 'none';
+  document.getElementById('listB').style.display = opt === 'B' ? '' : 'none';
+}
+
+function setType(type) {
+  currentType = type;
+  const isOpp = type === 'opportunity';
+  document.getElementById('typeOpp').className = 'type-btn' + (isOpp ? ' active-opp' : '');
+  document.getElementById('typeThreat').className = 'type-btn' + (!isOpp ? ' active-threat' : '');
+  document.getElementById('scenLabel').textContent = isOpp ? 'Describe the opportunity' : 'Describe the concern';
+  document.getElementById('impactSliderLabel').textContent = isOpp ? 'How good would this be?' : 'How bad would this be?';
+  document.getElementById('riskDesc').placeholder = isOpp
+    ? 'e.g. I might discover a talent I didn\'t know I had...'
+    : 'e.g. The company might be less stable than it appears...';
+}
+
+function updateReading(el, outId, labels) {
+  document.getElementById(outId).textContent = labels[parseInt(el.value)];
+}
+
+function addScenario() {
+  const desc = v('riskDesc');
+  if (!desc) { alert('Please describe the scenario first.'); return; }
+  const prob = parseInt(document.getElementById('riskProb').value);
+  const impact = parseInt(document.getElementById('riskImpact').value);
+  const mit = v('riskMit');
+  risks[currentOpt].push({ desc, type: currentType, prob, impact, mit });
+  renderList(currentOpt);
+  document.getElementById('riskDesc').value = '';
+  document.getElementById('riskMit').value = '';
+  document.getElementById('riskProb').value = 3;
+  document.getElementById('riskImpact').value = 3;
+  document.getElementById('probReading').textContent = 'Possible';
+  document.getElementById('impactReading').textContent = 'Significant';
+}
+
+function deleteRisk(opt, idx) {
+  risks[opt].splice(idx, 1);
+  renderList(opt);
+}
+
+function renderList(opt) {
+  const list = risks[opt];
+  const emptyEl = document.getElementById('empty' + opt);
+  const listEl = document.getElementById('riskList' + opt);
+  emptyEl.style.display = list.length ? 'none' : '';
+  listEl.innerHTML = list.map((r, i) => `
+    <div class="risk-card ${r.type === 'opportunity' ? 'opp' : 'threat'}">
+      <div class="risk-card-top">
+        <div>
+          <span class="risk-badge ${r.type === 'opportunity' ? 'opp' : 'threat'}">${r.type === 'opportunity' ? '✦ Upside' : '⚡ Concern'}</span>
+          <div class="risk-desc" style="margin-top:6px;">${escHtml(r.desc)}</div>
+          <div class="risk-meta">Likelihood: <b>${probLabels[r.prob]}</b> · Impact: <b>${impactLabels[r.impact]}</b> · Score: <b>${r.prob * r.impact}</b></div>
+          ${r.mit ? `<div class="risk-mit">→ ${escHtml(r.mit)}</div>` : ''}
+        </div>
+        <button class="delete-x" onclick="deleteRisk('${opt}',${i})">✕</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function escHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function calcScores(opt) {
+  let oppScore = 0, threatScore = 0, oppCount = 0, threatCount = 0;
+  risks[opt].forEach(r => {
+    const s = r.prob * r.impact;
+    if (r.type === 'opportunity') { oppScore += s; oppCount++; }
+    else { threatScore += s; threatCount++; }
+  });
+  return { oppScore, threatScore, net: oppScore - threatScore, oppCount, threatCount };
+}
+
+function buildReport() {
+  const optA = v('optAName') || 'Option A';
+  const optB = v('optBName') || 'Option B';
+  const scA = calcScores('A');
+  const scB = calcScores('B');
+  const mainGoal = v('mainGoal');
+
+  const winOpt = scA.net >= scB.net ? optA : optB;
+  const winSc = scA.net >= scB.net ? scA : scB;
+  const loseSc = scA.net >= scB.net ? scB : scA;
+  const margin = Math.abs(scA.net - scB.net);
+  const maxNet = Math.max(Math.abs(scA.net), Math.abs(scB.net), 1);
+  const confidence = margin > maxNet * 0.4 ? 'clearly' : margin > maxNet * 0.15 ? 'slightly' : 'narrowly';
+  const riskProfile = winSc.threatScore <= loseSc.threatScore ? 'lower overall downside' : 'stronger upside potential';
+
+  let heroReason = `Based on the scenarios you mapped out, <strong>${winOpt}</strong> comes out ${confidence} ahead — it has ${riskProfile}.`;
+  if (mainGoal) heroReason += ` Given that your main goal is "<em>${escHtml(mainGoal)}</em>," this option appears better aligned with what you're trying to achieve.`;
+  if (margin < 5) heroReason += ' That said, the gap is small — so this is a genuinely close call, and other factors you haven\'t scored may tip it.';
+
+  document.getElementById('recHero').innerHTML = `
+    <div class="hero-label">Recommendation</div>
+    <div class="hero-winner">${escHtml(winOpt)}</div>
+    <div class="hero-reason">${heroReason}</div>
+  `;
+
+  document.getElementById('compareGrid').innerHTML = [['A', optA, scA], ['B', optB, scB]].map(([k, nm, sc]) => {
+    const isWin = nm === winOpt;
+    return `<div class="compare-card ${isWin ? 'winning' : ''}">
+      <div class="cc-label">${isWin ? '→ Stronger overall' : 'Option ' + k}</div>
+      <div class="cc-name">${escHtml(nm)}</div>
+      <div class="cc-stat"><span class="cc-stat-label">Upsides (${sc.oppCount})</span><span class="val-pos">+${sc.oppScore}</span></div>
+      <div class="cc-stat"><span class="cc-stat-label">Concerns (${sc.threatCount})</span><span class="val-neg">−${sc.threatScore}</span></div>
+      <div class="cc-stat"><span class="cc-stat-label">Net score</span><span class="${sc.net >= 0 ? 'val-net-pos' : 'val-net-neg'}">${sc.net >= 0 ? '+' : ''}${sc.net}</span></div>
+    </div>`;
+  }).join('');
+
+  const maxBar = Math.max(scA.oppScore, scB.oppScore, scA.threatScore, scB.threatScore, 1);
+  document.getElementById('barsSection').innerHTML =
+    barRow(`${optA} — upsides`, scA.oppScore, maxBar, 'opp') +
+    barRow(`${optB} — upsides`, scB.oppScore, maxBar, 'opp') +
+    `<div style="height:12px"></div>` +
+    barRow(`${optA} — concerns`, scA.threatScore, maxBar, 'threat') +
+    barRow(`${optB} — concerns`, scB.threatScore, maxBar, 'threat');
+
+  let detail = '';
+  ['A','B'].forEach(opt => {
+    const nm = opt === 'A' ? optA : optB;
+    const list = risks[opt];
+    detail += `<div class="opt-section-header">${escHtml(nm)}</div>`;
+    if (!list.length) {
+      detail += `<div style="font-size:13px;color:var(--ink-light);margin-bottom:12px;">No scenarios recorded.</div>`;
+    } else {
+      list.forEach(r => {
+        detail += `<div class="risk-card ${r.type === 'opportunity' ? 'opp' : 'threat'}" style="margin-bottom:8px;">
+          <span class="risk-badge ${r.type === 'opportunity' ? 'opp' : 'threat'}">${r.type === 'opportunity' ? '✦ Upside' : '⚡ Concern'}</span>
+          <div class="risk-desc" style="margin-top:6px;">${escHtml(r.desc)}</div>
+          <div class="risk-meta">Likelihood: <b>${probLabels[r.prob]}</b> · Impact: <b>${impactLabels[r.impact]}</b> · Score: <b>${r.prob * r.impact}</b></div>
+          ${r.mit ? `<div class="risk-mit">→ ${escHtml(r.mit)}</div>` : ''}
+        </div>`;
+      });
+    }
+  });
+  document.getElementById('detailSection').innerHTML = detail;
+}
+
+function barRow(label, val, max, cls) {
+  const pct = Math.round(val / max * 100);
+  return `<div class="bar-row">
+    <div class="bar-meta"><span class="bar-name">${escHtml(label)}</span><span class="bar-pts">${val} pts</span></div>
+    <div class="bar-track"><div class="bar-fill bar-${cls}" style="width:${pct}%"></div></div>
+  </div>`;
+}
+
+updateDots(1);
+</script>
+</body>
+</html>
