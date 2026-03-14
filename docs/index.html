@@ -205,6 +205,22 @@
     padding-left: 8px;
   }
   .btn-ghost:hover { color: var(--ink-mid); }
+  .btn-ai {
+    background: linear-gradient(135deg, #3D5A47, #2A4A6B);
+    color: white;
+    border-color: transparent;
+  }
+  .btn-ai:hover { opacity: 0.88; }
+  .btn-ai:disabled { opacity: 0.5; cursor: not-allowed; }
+  .ai-spinner {
+    display: inline-block;
+    width: 14px; height: 14px;
+    border: 2px solid var(--sand-dark);
+    border-top-color: var(--moss);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
 
   /* Option tabs */
   .opt-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 1.5rem; }
@@ -397,6 +413,93 @@
     .compare-grid { grid-template-columns: 1fr; }
     .prog-label { display: none; }
   }
+
+  .gut-option-block {
+    background: var(--sand);
+    border: 1px solid var(--sand-dark);
+    border-radius: var(--radius);
+    padding: 1.25rem 1.5rem;
+  }
+  .gut-option-header {
+    display: flex; align-items: center; gap: 12px;
+  }
+  .gut-option-letter {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: var(--ink);
+    color: white;
+    font-family: 'Lora', serif;
+    font-size: 16px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .gut-option-name {
+    font-family: 'Lora', serif;
+    font-size: 18px;
+    font-weight: 400;
+    color: var(--ink);
+  }
+  .emotion-grid {
+    display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px;
+  }
+  .emotion-chip {
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1.5px solid var(--sand-dark);
+    background: var(--sand);
+    font-size: 13px;
+    color: var(--ink-mid);
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .emotion-chip:hover { border-color: var(--ink-mid); color: var(--ink); }
+  .emotion-chip.selected {
+    background: var(--ink);
+    color: white;
+    border-color: var(--ink);
+  }
+  .gut-report-block {
+    border-radius: var(--radius-sm);
+    padding: 1rem 1.25rem;
+    border: 1px solid var(--sand-dark);
+    background: var(--sand);
+    margin-bottom: 10px;
+  }
+  .gut-report-header {
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;
+  }
+  .gut-report-name { font-family: 'Lora', serif; font-size: 16px; font-weight: 400; }
+  .gut-score-pill {
+    padding: 3px 12px;
+    border-radius: 20px;
+    font-size: 12px; font-weight: 500;
+  }
+  .gut-score-pos { background: var(--moss-light); color: var(--moss); }
+  .gut-score-neg { background: var(--rust-light); color: var(--rust); }
+  .gut-score-mid { background: var(--sand-mid); color: var(--ink-mid); }
+  .gut-emotion-tag {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    background: var(--sky-light);
+    color: var(--sky);
+    font-size: 12px;
+    margin-right: 4px; margin-bottom: 4px;
+  }
+  .gut-text-quote {
+    font-size: 13px; color: var(--ink-mid); font-style: italic; margin-top: 8px; line-height: 1.5;
+  }
+
+  @media print {
+    body { background: white; padding: 0; }
+    .app-header, .progress-bar, .prog-line, #step1, #step2, #step3, #step4, .btn-row { display: none !important; }
+    #step5 { display: block !important; }
+    .report-hero { background: #1A1612 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .panel { border: 1px solid #ccc; break-inside: avoid; }
+    .compare-grid { grid-template-columns: 1fr 1fr; }
+    .bar-fill { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
 </style>
 </head>
 <body>
@@ -425,6 +528,10 @@
       </div>
       <div class="prog-step" id="dot4">
         <div class="prog-dot">4</div>
+        <div class="prog-label">Gut feeling</div>
+      </div>
+      <div class="prog-step" id="dot5">
+        <div class="prog-dot">5</div>
         <div class="prog-label">The picture</div>
       </div>
     </div>
@@ -509,7 +616,6 @@
         </button>
       </div>
 
-      <!-- Risk list per option -->
       <div id="listA">
         <div class="empty-hint" id="emptyA">No scenarios added yet for this option. Use the form below to add one.</div>
         <div class="risk-list" id="riskListA"></div>
@@ -519,7 +625,6 @@
         <div class="risk-list" id="riskListB"></div>
       </div>
 
-      <!-- Add scenario form -->
       <div class="add-form">
         <div class="add-form-title">Add a scenario</div>
 
@@ -565,18 +670,81 @@
 
         <div class="btn-row">
           <button class="btn btn-primary" onclick="addScenario()">Add this scenario</button>
+          <button class="btn btn-ai" id="aiGenBtn" onclick="generateWithAI()">&#10022; Help me generate</button>
+        </div>
+        <div id="aiStatus" style="display:none; margin-top:10px; font-size:13px; color:var(--ink-light); align-items:center; gap:8px;">
+          <span class="ai-spinner"></span><span id="aiStatusText">Thinking&hellip;</span>
         </div>
       </div>
 
       <div class="btn-row" style="margin-top:1.5rem;">
         <button class="btn btn-secondary" onclick="goStep(2)">← Back</button>
-        <button class="btn btn-primary" onclick="goStep(4)">See the full picture →</button>
+        <button class="btn btn-primary" onclick="goStep(4)">How does it feel? →</button>
       </div>
     </div>
   </div>
 
-  <!-- STEP 4: Report -->
+  <!-- STEP 4: Gut Feeling -->
   <div id="step4" class="step-hidden">
+    <div class="panel">
+      <h1 class="panel-title">How does each option feel?</h1>
+      <p class="panel-sub">Set aside the analysis for a moment. Imagine you're standing in a room with two pieces of paper on the floor — one says <strong id="gutOptALabel">Option A</strong>, the other says <strong id="gutOptBLabel">Option B</strong>.<br><br>Step onto the first piece of paper. You've made that decision. It's done. Notice what comes up — relief, excitement, dread, calm? Then step onto the second. What's different?</p>
+
+      <div class="gut-option-block">
+        <div class="gut-option-header">
+          <span class="gut-option-letter">A</span>
+          <span class="gut-option-name" id="gutLabelA">—</span>
+        </div>
+        <div class="field" style="margin-top:1rem;">
+          <label class="field-label">What emotion comes up most strongly?</label>
+          <div class="emotion-grid" id="emotionGridA"></div>
+        </div>
+        <div class="field">
+          <label class="field-label">What else came up for you?</label>
+          <textarea id="gutTextA" placeholder="e.g. I felt a surprising sense of relief, but also a fear of disappointing people who believed in me here..."></textarea>
+        </div>
+        <div class="slider-field">
+          <div class="slider-top">
+            <span class="slider-name">Overall gut feeling</span>
+            <span class="slider-reading" id="gutReadingA">Neutral</span>
+          </div>
+          <input type="range" min="1" max="5" value="3" step="1" id="gutSliderA" oninput="updateReading(this,'gutReadingA',gutLabels)">
+          <div class="slider-ends"><span>Very uneasy</span><span>Very good</span></div>
+        </div>
+      </div>
+
+      <div class="gut-option-block" style="margin-top:1.5rem;">
+        <div class="gut-option-header">
+          <span class="gut-option-letter">B</span>
+          <span class="gut-option-name" id="gutLabelB">—</span>
+        </div>
+        <div class="field" style="margin-top:1rem;">
+          <label class="field-label">What emotion comes up most strongly?</label>
+          <div class="emotion-grid" id="emotionGridB"></div>
+        </div>
+        <div class="field">
+          <label class="field-label">What else came up for you?</label>
+          <textarea id="gutTextB" placeholder="e.g. More anxiety than I expected. But also curiosity — like part of me wants to know what that world looks like..."></textarea>
+        </div>
+        <div class="slider-field">
+          <div class="slider-top">
+            <span class="slider-name">Overall gut feeling</span>
+            <span class="slider-reading" id="gutReadingB">Neutral</span>
+          </div>
+          <input type="range" min="1" max="5" value="3" step="1" id="gutSliderB" oninput="updateReading(this,'gutReadingB',gutLabels)">
+          <div class="slider-ends"><span>Very uneasy</span><span>Very good</span></div>
+        </div>
+      </div>
+
+      <div class="btn-row" style="margin-top:1.5rem;">
+        <button class="btn btn-secondary" onclick="goStep(3)">← Back</button>
+        <button class="btn btn-primary" onclick="goStep(5)">See the full picture →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 5: Report -->
+  <div id="step5" class="step-hidden">
 
     <div class="report-hero" id="recHero"></div>
 
@@ -588,13 +756,18 @@
     </div>
 
     <div class="panel">
+      <div class="section-title">The emotional read</div>
+      <div id="gutSection"></div>
+    </div>
+
+    <div class="panel">
       <div class="section-title">Every scenario, in detail</div>
       <div id="detailSection"></div>
     </div>
 
     <div class="btn-row" style="margin-top:0.5rem;">
-      <button class="btn btn-secondary" onclick="goStep(3)">← Adjust scenarios</button>
-      <button class="btn btn-ghost" onclick="window.print()">Print / save as PDF</button>
+      <button class="btn btn-secondary" onclick="goStep(4)">← Gut feeling</button>
+      <button class="btn btn-ghost" onclick="printReport()">Print / save as PDF</button>
     </div>
 
   </div>
@@ -609,16 +782,46 @@ let risks = { A: [], B: [] };
 
 const probLabels = ['','Very unlikely','Unlikely','Possible','Likely','Very likely'];
 const impactLabels = ['','Minor','Noticeable','Significant','Major','Life-changing'];
+const gutLabels = ['','Very uneasy','Uneasy','Neutral','Good','Very good'];
+const emotions = ['Excited','Relieved','Hopeful','Calm','Curious','Anxious','Afraid','Reluctant','Sad','Conflicted','Numb','Surprised'];
+let selectedEmotions = { A: [], B: [] };
+
+function setupGutStep() {
+  const optAName = v('optAName') || 'Option A';
+  const optBName = v('optBName') || 'Option B';
+  document.getElementById('gutLabelA').textContent = optAName;
+  document.getElementById('gutLabelB').textContent = optBName;
+  document.getElementById('gutOptALabel').textContent = optAName;
+  document.getElementById('gutOptBLabel').textContent = optBName;
+  renderEmotionGrid('A');
+  renderEmotionGrid('B');
+}
+
+function renderEmotionGrid(opt) {
+  const grid = document.getElementById('emotionGrid' + opt);
+  grid.innerHTML = emotions.map(e => {
+    const sel = selectedEmotions[opt].includes(e);
+    return `<button class="emotion-chip${sel ? ' selected' : ''}" onclick="toggleEmotion('${opt}','${e}')">${e}</button>`;
+  }).join('');
+}
+
+function toggleEmotion(opt, emotion) {
+  const arr = selectedEmotions[opt];
+  const idx = arr.indexOf(emotion);
+  if (idx === -1) arr.push(emotion);
+  else arr.splice(idx, 1);
+  renderEmotionGrid(opt);
+}
 
 function updateDots(step) {
-  for (let i = 1; i <= 4; i++) {
+  for (let i = 1; i <= 5; i++) {
     const el = document.getElementById('dot' + i);
     el.classList.remove('done','current');
     if (i < step) el.classList.add('done');
     if (i === step) el.classList.add('current');
   }
   const fill = document.getElementById('progLineFill');
-  fill.style.width = ((step - 1) / 3 * 100) + '%';
+  fill.style.width = ((step - 1) / 4 * 100) + '%';
 }
 
 function goStep(n) {
@@ -638,7 +841,8 @@ function goStep(n) {
     const optA = v('optAName'), optB = v('optBName');
     document.getElementById('step3Sub').textContent = `Think about "${optA}" vs "${optB}". Add what could go right — and what could go wrong — for each.`;
   }
-  if (n === 4) buildReport();
+  if (n === 4) setupGutStep();
+  if (n === 5) buildReport();
 
   document.getElementById('step' + currentStep).classList.add('step-hidden');
   document.getElementById('step' + n).classList.remove('step-hidden');
@@ -665,7 +869,7 @@ function setType(type) {
   document.getElementById('scenLabel').textContent = isOpp ? 'Describe the opportunity' : 'Describe the concern';
   document.getElementById('impactSliderLabel').textContent = isOpp ? 'How good would this be?' : 'How bad would this be?';
   document.getElementById('riskDesc').placeholder = isOpp
-    ? 'e.g. I might discover a talent I didn\'t know I had...'
+    ? "e.g. I might discover a talent I didn't know I had..."
     : 'e.g. The company might be less stable than it appears...';
 }
 
@@ -745,7 +949,7 @@ function buildReport() {
 
   let heroReason = `Based on the scenarios you mapped out, <strong>${winOpt}</strong> comes out ${confidence} ahead — it has ${riskProfile}.`;
   if (mainGoal) heroReason += ` Given that your main goal is "<em>${escHtml(mainGoal)}</em>," this option appears better aligned with what you're trying to achieve.`;
-  if (margin < 5) heroReason += ' That said, the gap is small — so this is a genuinely close call, and other factors you haven\'t scored may tip it.';
+  if (margin < 5) heroReason += " That said, the gap is small — so this is a genuinely close call, and other factors you haven't scored may tip it.";
 
   document.getElementById('recHero').innerHTML = `
     <div class="hero-label">Recommendation</div>
@@ -791,6 +995,51 @@ function buildReport() {
     }
   });
   document.getElementById('detailSection').innerHTML = detail;
+
+  // Gut feeling section
+  const gutScoreA = parseInt(document.getElementById('gutSliderA').value) || 3;
+  const gutScoreB = parseInt(document.getElementById('gutSliderB').value) || 3;
+  const gutTextA = (document.getElementById('gutTextA').value || '').trim();
+  const gutTextB = (document.getElementById('gutTextB').value || '').trim();
+  const emotionsA = selectedEmotions.A;
+  const emotionsB = selectedEmotions.B;
+
+  function gutPillClass(score) {
+    if (score >= 4) return 'gut-score-pos';
+    if (score <= 2) return 'gut-score-neg';
+    return 'gut-score-mid';
+  }
+
+  function gutBlock(opt, nm, score, emots, txt) {
+    const tags = emots.length ? emots.map(e => `<span class="gut-emotion-tag">${escHtml(e)}</span>`).join('') : '<span style="font-size:13px;color:var(--ink-light);">No emotions selected</span>';
+    const quote = txt ? `<div class="gut-text-quote">"${escHtml(txt)}"</div>` : '';
+    return `<div class="gut-report-block">
+      <div class="gut-report-header">
+        <span class="gut-report-name">${escHtml(nm)}</span>
+        <span class="gut-score-pill ${gutPillClass(score)}">${gutLabels[score]}</span>
+      </div>
+      <div>${tags}</div>
+      ${quote}
+    </div>`;
+  }
+
+  const gutWinner = gutScoreA >= gutScoreB ? optA : optB;
+  const gutTied = gutScoreA === gutScoreB;
+
+  const gutSummary = gutTied
+    ? `Your gut feeling is roughly equal for both options — which may mean the rational analysis carries more weight here, or that you need more time to sit with it.`
+    : `Emotionally, <strong>${escHtml(gutWinner)}</strong> feels better. ${Math.abs(gutScoreA - gutScoreB) >= 2 ? 'The difference is notable — worth paying attention to.' : 'The gap is small, so treat this as one signal among many.'}`;
+
+  const gutAligned = (!gutTied && gutWinner === winOpt);
+  const alignNote = gutTied ? '' : gutAligned
+    ? `<p style="font-size:13px;color:var(--moss);margin-top:10px;">✦ Your gut feeling aligns with the rational analysis — both point toward <strong>${escHtml(winOpt)}</strong>.</p>`
+    : `<p style="font-size:13px;color:var(--amber);margin-top:10px;">⚡ Your gut feeling points toward <strong>${escHtml(gutWinner)}</strong>, while the scenario analysis favours <strong>${escHtml(winOpt)}</strong>. This tension is worth exploring before you decide.</p>`;
+
+  document.getElementById('gutSection').innerHTML =
+    `<p style="font-size:14px;color:var(--ink-mid);line-height:1.65;margin-bottom:1rem;">${gutSummary}</p>` +
+    gutBlock('A', optA, gutScoreA, emotionsA, gutTextA) +
+    gutBlock('B', optB, gutScoreB, emotionsB, gutTextB) +
+    alignNote;
 }
 
 function barRow(label, val, max, cls) {
@@ -799,6 +1048,92 @@ function barRow(label, val, max, cls) {
     <div class="bar-meta"><span class="bar-name">${escHtml(label)}</span><span class="bar-pts">${val} pts</span></div>
     <div class="bar-track"><div class="bar-fill bar-${cls}" style="width:${pct}%"></div></div>
   </div>`;
+}
+
+async function generateWithAI() {
+  const decision = (document.getElementById('decisionDesc')?.value || '').trim();
+  const why = (document.getElementById('decisionWhy')?.value || '').trim();
+  const goal = (document.getElementById('mainGoal')?.value || '').trim();
+  const secondary = (document.getElementById('secondaryGoals')?.value || '').trim();
+  const optAName = (document.getElementById('optAName')?.value || '').trim();
+  const optADesc = (document.getElementById('optADesc')?.value || '').trim();
+  const optBName = (document.getElementById('optBName')?.value || '').trim();
+  const optBDesc = (document.getElementById('optBDesc')?.value || '').trim();
+  const optName = currentOpt === 'A' ? optAName : optBName;
+  const optDesc = currentOpt === 'A' ? optADesc : optBDesc;
+  const typeLabel = currentType === 'opportunity' ? 'opportunity (something good that could happen)' : 'threat (something bad that could happen)';
+
+  const btn = document.getElementById('aiGenBtn');
+  const statusEl = document.getElementById('aiStatus');
+  const statusText = document.getElementById('aiStatusText');
+  btn.disabled = true;
+  statusEl.style.display = 'flex';
+  statusText.textContent = 'Thinking…';
+
+  const existingScenarios = risks[currentOpt];
+  const existingList = existingScenarios.length
+    ? existingScenarios.map((r, i) => `${i + 1}. [${r.type}] ${r.desc}`).join('\n')
+    : 'None yet.';
+
+  const prompt = `You are helping someone think through a life decision using scenario analysis.
+
+Decision: ${decision}
+Why they are making it: ${why}
+Main goal: ${goal}
+Secondary goals: ${secondary}
+
+They are evaluating Option "${optName}": ${optDesc}
+
+Scenarios already added for this option (DO NOT repeat or closely echo any of these):
+${existingList}
+
+Generate ONE NEW, distinct, realistic and specific ${typeLabel} for this option that is meaningfully different from any already listed above. Think creatively — consider different dimensions such as relationships, finances, health, identity, time, or unexpected events.
+
+Respond ONLY with a valid JSON object, no markdown, no explanation, exactly this shape:
+{
+  "desc": "A clear, specific 1-2 sentence description of the scenario in plain language",
+  "prob": <integer 1-5 where 1=very unlikely, 3=possible, 5=very likely>,
+  "impact": <integer 1-5 where 1=minor, 3=significant, 5=life-changing>,
+  "mit": "A practical action they could take to influence this scenario (or empty string if none)"
+}`;
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 400,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const data = await response.json();
+    const raw = data.content?.[0]?.text || '';
+    const clean = raw.replace(/```json|```/g, '').trim();
+    const parsed = JSON.parse(clean);
+
+    document.getElementById('riskDesc').value = parsed.desc || '';
+    document.getElementById('riskMit').value = parsed.mit || '';
+
+    const prob = Math.min(5, Math.max(1, parseInt(parsed.prob) || 3));
+    const impact = Math.min(5, Math.max(1, parseInt(parsed.impact) || 3));
+    document.getElementById('riskProb').value = prob;
+    document.getElementById('riskImpact').value = impact;
+    document.getElementById('probReading').textContent = probLabels[prob];
+    document.getElementById('impactReading').textContent = impactLabels[impact];
+
+    statusText.textContent = 'Generated — review and adjust before adding.';
+    setTimeout(() => { statusEl.style.display = 'none'; }, 3000);
+  } catch (e) {
+    statusText.textContent = 'Something went wrong. Try again or write your own.';
+    setTimeout(() => { statusEl.style.display = 'none'; }, 3000);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function printReport() {
+  setTimeout(() => window.print(), 100);
 }
 
 updateDots(1);
