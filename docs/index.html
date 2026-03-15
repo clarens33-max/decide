@@ -491,6 +491,7 @@
     font-size: 13px; color: var(--ink-mid); font-style: italic; margin-top: 8px; line-height: 1.5;
   }
 
+
   .footer {
     margin-top: 3rem;
     padding: 1.5rem 0 2rem;
@@ -903,6 +904,7 @@
 
 <script>
 let currentStep = 1;
+
 let currentOpt = 'A';
 let currentType = 'opportunity';
 let risks = { A: [], B: [] };
@@ -1225,7 +1227,7 @@ Respond ONLY with a valid JSON object, no markdown, no explanation, exactly this
 }`;
 
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const response = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -1235,6 +1237,7 @@ Respond ONLY with a valid JSON object, no markdown, no explanation, exactly this
       })
     });
     const data = await response.json();
+    if (data.error) throw new Error(data.error.message);
     const raw = data.content?.[0]?.text || '';
     const clean = raw.replace(/```json|```/g, '').trim();
     const parsed = JSON.parse(clean);
@@ -1308,7 +1311,7 @@ Respond ONLY with a valid JSON object, no markdown, no explanation, exactly this
 }`;
 
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const response = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -1318,6 +1321,7 @@ Respond ONLY with a valid JSON object, no markdown, no explanation, exactly this
       })
     });
     const data = await response.json();
+    if (data.error) throw new Error(data.error.message);
     const raw = data.content?.[0]?.text || '';
     const clean = raw.replace(/```json|```/g, '').trim();
     const parsed = JSON.parse(clean);
