@@ -491,6 +491,99 @@
     font-size: 13px; color: var(--ink-mid); font-style: italic; margin-top: 8px; line-height: 1.5;
   }
 
+  .footer {
+    margin-top: 3rem;
+    padding: 1.5rem 0 2rem;
+    border-top: 1px solid var(--sand-dark);
+    text-align: center;
+  }
+  .footer-text {
+    font-size: 12px;
+    color: var(--ink-light);
+    line-height: 1.7;
+  }
+  .footer-link {
+    color: var(--ink-light);
+    text-decoration: underline;
+    cursor: pointer;
+    background: none;
+    border: none;
+    font-family: inherit;
+    font-size: inherit;
+    padding: 0;
+  }
+  .footer-link:hover { color: var(--ink-mid); }
+
+  /* Modal */
+  .modal-backdrop {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+  }
+  .modal-backdrop.open { display: flex; }
+  .modal {
+    background: white;
+    border-radius: var(--radius);
+    padding: 2rem;
+    max-width: 560px;
+    width: 100%;
+    max-height: 80vh;
+    overflow-y: auto;
+    position: relative;
+    animation: fadeIn 0.2s ease;
+  }
+  .modal-title {
+    font-family: 'Lora', serif;
+    font-size: 20px;
+    font-weight: 400;
+    margin-bottom: 1rem;
+  }
+  .modal-body {
+    font-size: 14px;
+    color: var(--ink-mid);
+    line-height: 1.75;
+  }
+  .modal-body p { margin-bottom: 0.85rem; }
+  .modal-body strong { color: var(--ink); }
+  .modal-close {
+    position: absolute;
+    top: 1rem; right: 1rem;
+    background: none; border: none;
+    font-size: 20px; cursor: pointer;
+    color: var(--ink-light);
+  }
+  .modal-close:hover { color: var(--ink); }
+
+  /* Option AI generate */
+  .opt-ai-row {
+    display: flex; align-items: center; gap: 8px; margin-top: 8px;
+  }
+  .btn-ai-sm {
+    padding: 7px 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    border: 1.5px solid transparent;
+    background: linear-gradient(135deg, #3D5A47, #2A4A6B);
+    color: white;
+    transition: opacity 0.15s;
+  }
+  .btn-ai-sm:hover { opacity: 0.88; }
+  .btn-ai-sm:disabled { opacity: 0.5; cursor: not-allowed; }
+  .opt-ai-status {
+    font-size: 12px;
+    color: var(--ink-light);
+    display: none;
+    align-items: center;
+    gap: 6px;
+  }
+
   @media print {
     body { background: white; padding: 0; }
     .app-header, .progress-bar, .prog-line, #step1, #step2, #step3, #step4, .btn-row { display: none !important; }
@@ -579,6 +672,10 @@
       <div class="field">
         <label class="field-label">What does Option A actually mean for you?</label>
         <textarea id="optADesc" placeholder="e.g. Leave my current company, join a 50-person startup at a higher salary, but with more uncertainty..."></textarea>
+        <div class="opt-ai-row">
+          <button class="btn-ai-sm" id="optAIBtnA" onclick="generateOption('A')">&#10022; Help me think of an option</button>
+          <div class="opt-ai-status" id="optAIStatusA"><span class="ai-spinner"></span><span>Thinking&hellip;</span></div>
+        </div>
       </div>
 
       <hr class="divider" style="margin: 1.25rem 0;">
@@ -590,6 +687,10 @@
       <div class="field">
         <label class="field-label">What does Option B actually mean for you?</label>
         <textarea id="optBDesc" placeholder="e.g. Stay in my current role, keep my salary, and wait to see if the promotion comes through by Q3..."></textarea>
+        <div class="opt-ai-row">
+          <button class="btn-ai-sm" id="optAIBtnB" onclick="generateOption('B')">&#10022; Help me think of an option</button>
+          <div class="opt-ai-status" id="optAIStatusB"><span class="ai-spinner"></span><span>Thinking&hellip;</span></div>
+        </div>
       </div>
 
       <div class="btn-row">
@@ -772,6 +873,32 @@
 
   </div>
 
+</div>
+
+  <div class="footer">
+    <p class="footer-text">
+      No data is stored anywhere — everything lives in your browser only.<br>
+      Save your results before you close this tab — they cannot be recovered.<br>
+      This tool uses AI and may be wrong. It is not a substitute for professional advice.<br>
+      By using this tool you agree that the authors accept no responsibility for any decisions made.<br><br>
+      <button class="footer-link" onclick="document.getElementById('tncModal').classList.add('open')">Full terms &amp; disclaimer</button>
+    </p>
+  </div>
+
+<!-- T&C Modal -->
+<div class="modal-backdrop" id="tncModal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal">
+    <button class="modal-close" onclick="document.getElementById('tncModal').classList.remove('open')">&#x2715;</button>
+    <h2 class="modal-title">Terms &amp; Disclaimer</h2>
+    <div class="modal-body">
+      <p><strong>No data storage.</strong> This tool runs entirely in your browser. No personal information, decision details, or results are transmitted to or stored on any server. When you close or refresh this tab, all data is permanently lost.</p>
+      <p><strong>Save your results.</strong> If you want to keep a record of your analysis, use the "Print / save as PDF" button on the final screen before closing. There is no way to recover a session once it is gone.</p>
+      <p><strong>AI-generated content.</strong> This tool uses an artificial intelligence model to suggest scenarios and options. AI outputs can be inaccurate, incomplete, or misleading. Always apply your own judgement. Generated suggestions are a starting point, not a conclusion.</p>
+      <p><strong>Not professional advice.</strong> This tool is designed to help you structure your thinking. It is not a substitute for financial, legal, medical, psychological, or any other professional advice. If your decision has significant consequences in any of these areas, please consult a qualified professional.</p>
+      <p><strong>No liability.</strong> The creators of this tool accept no responsibility or liability for any decision made, action taken, or outcome experienced as a result of using this tool. You use it entirely at your own risk.</p>
+      <p><strong>For informational purposes only.</strong> The recommendation produced by this tool is based solely on the information and scores you enter. It is a mechanical output of a scoring model, not an informed judgement about your specific circumstances.</p>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -1129,6 +1256,79 @@ Respond ONLY with a valid JSON object, no markdown, no explanation, exactly this
     setTimeout(() => { statusEl.style.display = 'none'; }, 3000);
   } finally {
     btn.disabled = false;
+  }
+}
+
+async function generateOption(opt) {
+  const decision = (document.getElementById('decisionDesc')?.value || '').trim();
+  const why = (document.getElementById('decisionWhy')?.value || '').trim();
+  const goal = (document.getElementById('mainGoal')?.value || '').trim();
+  const secondary = (document.getElementById('secondaryGoals')?.value || '').trim();
+
+  // Read what already exists for both options
+  const existingA = (document.getElementById('optAName')?.value || '').trim();
+  const existingADesc = (document.getElementById('optADesc')?.value || '').trim();
+  const existingB = (document.getElementById('optBName')?.value || '').trim();
+  const existingBDesc = (document.getElementById('optBDesc')?.value || '').trim();
+
+  const existingOptions = [];
+  if (opt === 'B' && (existingA || existingADesc)) {
+    existingOptions.push(`Option A — "${existingA}": ${existingADesc}`);
+  }
+  if (opt === 'A' && (existingB || existingBDesc)) {
+    existingOptions.push(`Option B — "${existingB}": ${existingBDesc}`);
+  }
+  const existingStr = existingOptions.length
+    ? `Already defined options (be genuinely different and, where possible, opposite or contrasting):
+${existingOptions.join('\n')}`
+    : 'No other options defined yet.';
+
+  const btn = document.getElementById('optAIBtn' + opt);
+  const statusEl = document.getElementById('optAIStatus' + opt);
+  btn.disabled = true;
+  statusEl.style.display = 'flex';
+
+  const prompt = `You are helping someone think through a major life decision by defining their two options clearly.
+
+Decision: ${decision}
+Why they are making it: ${why}
+Main goal: ${goal}
+Secondary goals: ${secondary}
+
+They need help defining Option ${opt}.
+
+${existingStr}
+
+Generate ONE clear, realistic option for Option ${opt}. It should be meaningfully distinct — ideally representing a genuinely different path, not a minor variation. If another option exists, this one should contrast or be opposite to it where possible.
+
+Respond ONLY with a valid JSON object, no markdown, no explanation, exactly this shape:
+{
+  "name": "A short 2-5 word label for this option",
+  "desc": "A 2-3 sentence description of what this option actually means in practice for this person"
+}`;
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 300,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const data = await response.json();
+    const raw = data.content?.[0]?.text || '';
+    const clean = raw.replace(/```json|```/g, '').trim();
+    const parsed = JSON.parse(clean);
+
+    document.getElementById('opt' + opt + 'Name').value = parsed.name || '';
+    document.getElementById('opt' + opt + 'Desc').value = parsed.desc || '';
+  } catch (e) {
+    alert('Something went wrong generating an option. Please try again or write your own.');
+  } finally {
+    btn.disabled = false;
+    statusEl.style.display = 'none';
   }
 }
 
