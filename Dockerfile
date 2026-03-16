@@ -1,5 +1,12 @@
-FROM nginx:alpine
-COPY docs/index.html /usr/share/nginx/html/
+FROM node:18-alpine
+
+WORKDIR /app
+
+COPY package.json ./
+RUN npm install --production
+
+COPY server.js ./
+COPY docs/ ./docs/
 
 EXPOSE 3000
 
