@@ -1,12 +1,5 @@
-FROM node:18-alpine
-
-WORKDIR /app
-
-COPY package.json ./
-RUN npm install --production
-
-COPY server.js ./
-COPY docs/ ./docs/
+FROM nginx:alpine
+COPY docs/index.html /usr/share/nginx/html/
 
 EXPOSE 3000
 
