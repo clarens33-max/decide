@@ -1267,14 +1267,16 @@ function buildReport() {
   let heroReason = `Based on the scenarios you mapped out, <strong>${escHtml(optNames[winner])}</strong> comes out ${confidence} ahead`;
   if (activeOptions.length > 2) heroReason += ` across all ${activeOptions.length} options`;
   heroReason += ` — it has ${riskProfile}.`;
-  if (mainGoal) heroReason += ` Given that your main goal is "<em>${escHtml(mainGoal)}</em>," this option appears best aligned with what you're trying to achieve.`;
   if (margin < 5) heroReason += " That said, the gap is small — so this is a genuinely close call, and other factors you haven't scored may tip it.";
 
   document.getElementById('recHero').innerHTML = `
     <div class="hero-label">Recommendation</div>
     <div class="hero-winner">${escHtml(optNames[winner])}</div>
     <div class="hero-reason">${heroReason}</div>
+    ${mainGoal ? `<div id="goalAlignNote" style="font-size:13px;opacity:0.7;margin-top:10px;line-height:1.55;font-style:italic;">Checking alignment with your goal&hellip;</div>` : ''}
   `;
+
+  if (mainGoal) assessGoalAlignment(winner, optNames, scores, mainGoal);
 
   // Compare grid — max 3 columns
   const cols = Math.min(activeOptions.length, 3);
@@ -1690,6 +1692,70 @@ Respond ONLY with a valid JSON object, no markdown, no explanation:
     statusEl.style.display = 'none';
     statusEl.innerHTML = '';
   }, 5000);
+}
+
+// --- Goal alignment assessment (Step 5 hero) ---
+
+async function assessGoalAlignment(winner, optNames, scores, mainGoal) {
+  const decision = v('decisionDesc');
+  const winnerName = optNames[winner];
+  const winnerDesc = v('opt' + winner + 'Desc');
+  const winnerScenarios = risks[winner];
+
+  const scenarioSummary = winnerScenarios.length
+    ? winnerScenarios.map(r => `[${r.type === 'opportunity' ? 'Upside' : 'Concern'}] ${r.desc}`).join('\n')
+    : 'No scenarios recorded.';
+
+  // Include other options for context (so AI can compare)
+  const othersSummary = activeOptions.filter(o => o !== winner).map(o => {
+    const sc = scores[o];
+    return `Option ${o} — "${optNames[o]}": net score ${sc.net} (upsides ${sc.oppScore}, concerns ${sc.threatScore})`;
+  }).join('\n');
+
+  const prompt = `Someone is making a decision and has identified their main goal. You need to honestly assess whether the top-scoring option genuinely serves that goal — or not.
+
+Decision: ${decision}
+Main goal: "${mainGoal}"
+
+Top-scoring option: "${winnerName}"
+Description: ${winnerDesc || '(no description provided)'}
+
+Scenarios mapped for this option:
+${scenarioSummary}
+
+Other options for context:
+${othersSummary || 'None.'}
+
+Write ONE honest, specific sentence (15–25 words) assessing whether this option genuinely serves the goal of "${mainGoal}".
+- If it clearly does: explain concisely why, referencing the actual goal and option content.
+- If it's unclear or weak: say so honestly (e.g. "The connection to X is not obvious from the scenarios — worth reflecting on before deciding.").
+- If another option might serve the goal better despite a lower score: note that briefly.
+- Never use the phrase "appears best aligned." Be direct and specific.
+
+Respond ONLY with the sentence. No quotes around it. No preamble.`;
+
+  const noteEl = document.getElementById('goalAlignNote');
+  try {
+    const response = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 120,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const data = await response.json();
+    if (data.error) throw new Error(data.error.message || data.error);
+    const text = (data.content?.[0]?.text || '').trim();
+    if (noteEl && text) {
+      noteEl.textContent = text;
+      noteEl.style.fontStyle = 'normal';
+      noteEl.style.opacity = '0.85';
+    }
+  } catch (e) {
+    if (noteEl) noteEl.style.display = 'none';
+  }
 }
 
 function printReport() {
