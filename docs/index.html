@@ -223,8 +223,10 @@
   @keyframes spin { to { transform: rotate(360deg); } }
 
   /* Option tabs */
-  .opt-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 1.5rem; }
+  .opt-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 1.5rem; }
   .opt-tab {
+    flex: 1;
+    min-width: 80px;
     padding: 12px 16px;
     font-family: 'DM Sans', sans-serif;
     font-size: 14px;
@@ -363,7 +365,16 @@
   }
   .report-hero .hero-reason { font-size: 14px; opacity: 0.8; line-height: 1.65; }
 
-  .compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1rem; }
+  .compare-grid { display: grid; gap: 10px; margin-bottom: 1rem; }
+
+  /* Add / remove option controls */
+  .opt-manage-row { display: flex; gap: 8px; margin-top: 1.5rem; flex-wrap: wrap; }
+  .btn-remove-opt {
+    background: transparent; color: var(--rust); border: 1.5px solid var(--rust);
+    padding: 8px 16px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500;
+    border-radius: var(--radius-sm); cursor: pointer; transition: all 0.15s; display: none;
+  }
+  .btn-remove-opt:hover { background: var(--rust-light); }
   .compare-card {
     background: white;
     border: 1px solid var(--sand-dark);
@@ -694,6 +705,62 @@
         </div>
       </div>
 
+      <!-- Option C (hidden by default) -->
+      <div id="optBlockC" style="display:none">
+        <hr class="divider" style="margin: 1.25rem 0;">
+        <div class="field">
+          <label class="field-label">Option C — short name</label>
+          <input type="text" id="optCName" placeholder="e.g. A third path" />
+        </div>
+        <div class="field">
+          <label class="field-label">What does Option C actually mean for you?</label>
+          <textarea id="optCDesc" placeholder="Describe this option..."></textarea>
+          <div class="opt-ai-row">
+            <button class="btn-ai-sm" id="optAIBtnC" onclick="generateOption('C')">&#10022; Help me think of an option</button>
+            <div class="opt-ai-status" id="optAIStatusC"><span class="ai-spinner"></span><span>Thinking&hellip;</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Option D (hidden by default) -->
+      <div id="optBlockD" style="display:none">
+        <hr class="divider" style="margin: 1.25rem 0;">
+        <div class="field">
+          <label class="field-label">Option D — short name</label>
+          <input type="text" id="optDName" placeholder="e.g. A fourth path" />
+        </div>
+        <div class="field">
+          <label class="field-label">What does Option D actually mean for you?</label>
+          <textarea id="optDDesc" placeholder="Describe this option..."></textarea>
+          <div class="opt-ai-row">
+            <button class="btn-ai-sm" id="optAIBtnD" onclick="generateOption('D')">&#10022; Help me think of an option</button>
+            <div class="opt-ai-status" id="optAIStatusD"><span class="ai-spinner"></span><span>Thinking&hellip;</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Option E (hidden by default) -->
+      <div id="optBlockE" style="display:none">
+        <hr class="divider" style="margin: 1.25rem 0;">
+        <div class="field">
+          <label class="field-label">Option E — short name</label>
+          <input type="text" id="optEName" placeholder="e.g. A fifth path" />
+        </div>
+        <div class="field">
+          <label class="field-label">What does Option E actually mean for you?</label>
+          <textarea id="optEDesc" placeholder="Describe this option..."></textarea>
+          <div class="opt-ai-row">
+            <button class="btn-ai-sm" id="optAIBtnE" onclick="generateOption('E')">&#10022; Help me think of an option</button>
+            <div class="opt-ai-status" id="optAIStatusE"><span class="ai-spinner"></span><span>Thinking&hellip;</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="opt-manage-row">
+        <button class="btn btn-secondary" id="addOptionBtn" onclick="addOption()">+ Add another option</button>
+        <button class="btn-remove-opt" id="removeOptionBtn" onclick="removeLastOption()">Remove last option</button>
+      </div>
+
       <div class="btn-row">
         <button class="btn btn-secondary" onclick="goStep(1)">← Back</button>
         <button class="btn btn-primary" onclick="goStep(3)">Continue →</button>
@@ -707,16 +774,7 @@
       <h1 class="panel-title">What could happen?</h1>
       <p class="panel-sub" id="step3Sub">Think through each option. What could go right, and what could go wrong?</p>
 
-      <div class="opt-tabs">
-        <button class="opt-tab active" id="tabA" onclick="switchOpt('A')">
-          <span class="tab-label">Option A</span>
-          <span id="tabAName">—</span>
-        </button>
-        <button class="opt-tab" id="tabB" onclick="switchOpt('B')">
-          <span class="tab-label">Option B</span>
-          <span id="tabBName">—</span>
-        </button>
-      </div>
+      <div class="opt-tabs" id="optTabsContainer"></div>
 
       <div id="listA">
         <div class="empty-hint" id="emptyA">No scenarios added yet for this option. Use the form below to add one.</div>
@@ -725,6 +783,18 @@
       <div id="listB" style="display:none">
         <div class="empty-hint" id="emptyB">No scenarios added yet for this option. Use the form below to add one.</div>
         <div class="risk-list" id="riskListB"></div>
+      </div>
+      <div id="listC" style="display:none">
+        <div class="empty-hint" id="emptyC">No scenarios added yet for this option. Use the form below to add one.</div>
+        <div class="risk-list" id="riskListC"></div>
+      </div>
+      <div id="listD" style="display:none">
+        <div class="empty-hint" id="emptyD">No scenarios added yet for this option. Use the form below to add one.</div>
+        <div class="risk-list" id="riskListD"></div>
+      </div>
+      <div id="listE" style="display:none">
+        <div class="empty-hint" id="emptyE">No scenarios added yet for this option. Use the form below to add one.</div>
+        <div class="risk-list" id="riskListE"></div>
       </div>
 
       <div class="add-form">
@@ -790,53 +860,9 @@
   <div id="step4" class="step-hidden">
     <div class="panel">
       <h1 class="panel-title">How does each option feel?</h1>
-      <p class="panel-sub">Set aside the analysis for a moment. Imagine you're standing in a room with two pieces of paper on the floor — one says <strong id="gutOptALabel">Option A</strong>, the other says <strong id="gutOptBLabel">Option B</strong>.<br><br>Step onto the first piece of paper. You've made that decision. It's done. Notice what comes up — relief, excitement, dread, calm? Then step onto the second. What's different?</p>
+      <p class="panel-sub">Set aside the analysis for a moment. Imagine you've committed to each option in turn — the decision is done, no going back. Notice what comes up for each one: relief, excitement, dread, calm? Pay attention to the contrast.</p>
 
-      <div class="gut-option-block">
-        <div class="gut-option-header">
-          <span class="gut-option-letter">A</span>
-          <span class="gut-option-name" id="gutLabelA">—</span>
-        </div>
-        <div class="field" style="margin-top:1rem;">
-          <label class="field-label">What emotion comes up most strongly?</label>
-          <div class="emotion-grid" id="emotionGridA"></div>
-        </div>
-        <div class="field">
-          <label class="field-label">What else came up for you?</label>
-          <textarea id="gutTextA" placeholder="e.g. I felt a surprising sense of relief, but also a fear of disappointing people who believed in me here..."></textarea>
-        </div>
-        <div class="slider-field">
-          <div class="slider-top">
-            <span class="slider-name">Overall gut feeling</span>
-            <span class="slider-reading" id="gutReadingA">Neutral</span>
-          </div>
-          <input type="range" min="1" max="5" value="3" step="1" id="gutSliderA" oninput="updateReading(this,'gutReadingA',gutLabels)">
-          <div class="slider-ends"><span>Very uneasy</span><span>Very good</span></div>
-        </div>
-      </div>
-
-      <div class="gut-option-block" style="margin-top:1.5rem;">
-        <div class="gut-option-header">
-          <span class="gut-option-letter">B</span>
-          <span class="gut-option-name" id="gutLabelB">—</span>
-        </div>
-        <div class="field" style="margin-top:1rem;">
-          <label class="field-label">What emotion comes up most strongly?</label>
-          <div class="emotion-grid" id="emotionGridB"></div>
-        </div>
-        <div class="field">
-          <label class="field-label">What else came up for you?</label>
-          <textarea id="gutTextB" placeholder="e.g. More anxiety than I expected. But also curiosity — like part of me wants to know what that world looks like..."></textarea>
-        </div>
-        <div class="slider-field">
-          <div class="slider-top">
-            <span class="slider-name">Overall gut feeling</span>
-            <span class="slider-reading" id="gutReadingB">Neutral</span>
-          </div>
-          <input type="range" min="1" max="5" value="3" step="1" id="gutSliderB" oninput="updateReading(this,'gutReadingB',gutLabels)">
-          <div class="slider-ends"><span>Very uneasy</span><span>Very good</span></div>
-        </div>
-      </div>
+      <div id="gutOptionsContainer"></div>
 
       <div class="btn-row" style="margin-top:1.5rem;">
         <button class="btn btn-secondary" onclick="goStep(3)">← Back</button>
@@ -904,30 +930,56 @@
 
 <script>
 let currentStep = 1;
-
 let currentOpt = 'A';
 let currentType = 'opportunity';
-let risks = { A: [], B: [] };
+
+const OPTION_LETTERS = ['A', 'B', 'C', 'D', 'E'];
+let activeOptions = ['A', 'B'];
+
+let risks = { A: [], B: [], C: [], D: [], E: [] };
+let selectedEmotions = { A: [], B: [], C: [], D: [], E: [] };
 
 const probLabels = ['','Very unlikely','Unlikely','Possible','Likely','Very likely'];
 const impactLabels = ['','Minor','Noticeable','Significant','Major','Life-changing'];
 const gutLabels = ['','Very uneasy','Uneasy','Neutral','Good','Very good'];
 const emotions = ['Excited','Relieved','Hopeful','Calm','Curious','Anxious','Afraid','Reluctant','Sad','Conflicted','Numb','Surprised'];
-let selectedEmotions = { A: [], B: [] };
 
-function setupGutStep() {
-  const optAName = v('optAName') || 'Option A';
-  const optBName = v('optBName') || 'Option B';
-  document.getElementById('gutLabelA').textContent = optAName;
-  document.getElementById('gutLabelB').textContent = optBName;
-  document.getElementById('gutOptALabel').textContent = optAName;
-  document.getElementById('gutOptBLabel').textContent = optBName;
-  renderEmotionGrid('A');
-  renderEmotionGrid('B');
+// --- Option management ---
+
+function addOption() {
+  if (activeOptions.length >= 5) return;
+  const next = OPTION_LETTERS[activeOptions.length];
+  activeOptions.push(next);
+  document.getElementById('optBlock' + next).style.display = '';
+  updateManageBtns();
 }
+
+function removeLastOption() {
+  if (activeOptions.length <= 2) return;
+  const last = activeOptions[activeOptions.length - 1];
+  activeOptions.pop();
+  document.getElementById('optBlock' + last).style.display = 'none';
+  const nameEl = document.getElementById('opt' + last + 'Name');
+  const descEl = document.getElementById('opt' + last + 'Desc');
+  if (nameEl) nameEl.value = '';
+  if (descEl) descEl.value = '';
+  risks[last] = [];
+  selectedEmotions[last] = [];
+  updateManageBtns();
+}
+
+function updateManageBtns() {
+  const addBtn = document.getElementById('addOptionBtn');
+  const removeBtn = document.getElementById('removeOptionBtn');
+  if (addBtn) addBtn.style.display = activeOptions.length >= 5 ? 'none' : '';
+  if (removeBtn) removeBtn.style.display = activeOptions.length <= 2 ? 'none' : '';
+}
+
+// --- Emotion grids ---
 
 function renderEmotionGrid(opt) {
   const grid = document.getElementById('emotionGrid' + opt);
+  if (!grid) return;
   grid.innerHTML = emotions.map(e => {
     const sel = selectedEmotions[opt].includes(e);
     return `<button class="emotion-chip${sel ? ' selected' : ''}" onclick="toggleEmotion('${opt}','${e}')">${e}</button>`;
@@ -942,6 +994,8 @@ function toggleEmotion(opt, emotion) {
   renderEmotionGrid(opt);
 }
 
+// --- Progress ---
+
 function updateDots(step) {
   for (let i = 1; i <= 5; i++) {
     const el = document.getElementById('dot' + i);
@@ -953,6 +1007,8 @@ function updateDots(step) {
   fill.style.width = ((step - 1) / 4 * 100) + '%';
 }
 
+// --- Step navigation ---
+
 function goStep(n) {
   if (n === 2) {
     if (!v('decisionDesc') || !v('decisionWhy') || !v('mainGoal')) {
@@ -961,14 +1017,16 @@ function goStep(n) {
     }
   }
   if (n === 3) {
-    if (!v('optAName') || !v('optBName')) {
-      alert('Please name both options before continuing.');
-      return;
+    for (const opt of activeOptions) {
+      if (!v('opt' + opt + 'Name')) {
+        alert('Please name all options before continuing.');
+        return;
+      }
     }
-    document.getElementById('tabAName').textContent = v('optAName');
-    document.getElementById('tabBName').textContent = v('optBName');
-    const optA = v('optAName'), optB = v('optBName');
-    document.getElementById('step3Sub').textContent = `Think about "${optA}" vs "${optB}". Add what could go right — and what could go wrong — for each.`;
+    const names = activeOptions.map(o => v('opt' + o + 'Name')).join(' vs ');
+    document.getElementById('step3Sub').textContent = `Think about ${names}. Add what could go right — and what could go wrong — for each.`;
+    if (!activeOptions.includes(currentOpt)) currentOpt = 'A';
+    renderOptTabs();
   }
   if (n === 4) setupGutStep();
   if (n === 5) buildReport();
@@ -982,12 +1040,27 @@ function goStep(n) {
 
 function v(id) { return (document.getElementById(id)?.value || '').trim(); }
 
+// --- Step 3: Scenarios ---
+
+function renderOptTabs() {
+  if (!activeOptions.includes(currentOpt)) currentOpt = activeOptions[0];
+  const container = document.getElementById('optTabsContainer');
+  container.innerHTML = activeOptions.map(opt => `
+    <button class="opt-tab${opt === currentOpt ? ' active' : ''}" onclick="switchOpt('${opt}')">
+      <span class="tab-label">Option ${opt}</span>
+      <span>${escHtml(v('opt' + opt + 'Name') || '—')}</span>
+    </button>
+  `).join('');
+
+  OPTION_LETTERS.forEach(opt => {
+    const el = document.getElementById('list' + opt);
+    if (el) el.style.display = (opt === currentOpt && activeOptions.includes(opt)) ? '' : 'none';
+  });
+}
+
 function switchOpt(opt) {
   currentOpt = opt;
-  document.getElementById('tabA').classList.toggle('active', opt === 'A');
-  document.getElementById('tabB').classList.toggle('active', opt === 'B');
-  document.getElementById('listA').style.display = opt === 'A' ? '' : 'none';
-  document.getElementById('listB').style.display = opt === 'B' ? '' : 'none';
+  renderOptTabs();
 }
 
 function setType(type) {
@@ -1031,6 +1104,7 @@ function renderList(opt) {
   const list = risks[opt];
   const emptyEl = document.getElementById('empty' + opt);
   const listEl = document.getElementById('riskList' + opt);
+  if (!emptyEl || !listEl) return;
   emptyEl.style.display = list.length ? 'none' : '';
   listEl.innerHTML = list.map((r, i) => `
     <div class="risk-card ${r.type === 'opportunity' ? 'opp' : 'threat'}">
@@ -1051,6 +1125,44 @@ function escHtml(str) {
   return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+// --- Step 4: Gut feeling ---
+
+function setupGutStep() {
+  const container = document.getElementById('gutOptionsContainer');
+  container.innerHTML = activeOptions.map((opt, i) => {
+    const name = v('opt' + opt + 'Name') || 'Option ' + opt;
+    return `
+      ${i > 0 ? '<div style="margin-top:1.5rem;"></div>' : ''}
+      <div class="gut-option-block">
+        <div class="gut-option-header">
+          <span class="gut-option-letter">${opt}</span>
+          <span class="gut-option-name">${escHtml(name)}</span>
+        </div>
+        <div class="field" style="margin-top:1rem;">
+          <label class="field-label">What emotion comes up most strongly?</label>
+          <div class="emotion-grid" id="emotionGrid${opt}"></div>
+        </div>
+        <div class="field">
+          <label class="field-label">What else came up for you?</label>
+          <textarea id="gutText${opt}" placeholder="e.g. I felt a surprising sense of relief, but also a fear of disappointing people..."></textarea>
+        </div>
+        <div class="slider-field">
+          <div class="slider-top">
+            <span class="slider-name">Overall gut feeling</span>
+            <span class="slider-reading" id="gutReading${opt}">Neutral</span>
+          </div>
+          <input type="range" min="1" max="5" value="3" step="1" id="gutSlider${opt}" oninput="updateReading(this,'gutReading${opt}',gutLabels)">
+          <div class="slider-ends"><span>Very uneasy</span><span>Very good</span></div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  activeOptions.forEach(opt => renderEmotionGrid(opt));
+}
+
+// --- Step 5: Report ---
+
 function calcScores(opt) {
   let oppScore = 0, threatScore = 0, oppCount = 0, threatCount = 0;
   risks[opt].forEach(r => {
@@ -1062,54 +1174,65 @@ function calcScores(opt) {
 }
 
 function buildReport() {
-  const optA = v('optAName') || 'Option A';
-  const optB = v('optBName') || 'Option B';
-  const scA = calcScores('A');
-  const scB = calcScores('B');
+  const optNames = {};
+  activeOptions.forEach(opt => { optNames[opt] = v('opt' + opt + 'Name') || 'Option ' + opt; });
+
+  const scores = {};
+  activeOptions.forEach(opt => { scores[opt] = calcScores(opt); });
+
+  // Find winner
+  let winner = activeOptions[0];
+  activeOptions.forEach(opt => { if (scores[opt].net > scores[winner].net) winner = opt; });
+
+  const winSc = scores[winner];
   const mainGoal = v('mainGoal');
-
-  const winOpt = scA.net >= scB.net ? optA : optB;
-  const winSc = scA.net >= scB.net ? scA : scB;
-  const loseSc = scA.net >= scB.net ? scB : scA;
-  const margin = Math.abs(scA.net - scB.net);
-  const maxNet = Math.max(Math.abs(scA.net), Math.abs(scB.net), 1);
+  const others = activeOptions.filter(o => o !== winner);
+  const secondBest = others.sort((a, b) => scores[b].net - scores[a].net)[0];
+  const margin = secondBest ? Math.abs(winSc.net - scores[secondBest].net) : 0;
+  const maxNet = Math.max(...activeOptions.map(o => Math.abs(scores[o].net)), 1);
   const confidence = margin > maxNet * 0.4 ? 'clearly' : margin > maxNet * 0.15 ? 'slightly' : 'narrowly';
-  const riskProfile = winSc.threatScore <= loseSc.threatScore ? 'lower overall downside' : 'stronger upside potential';
+  const riskProfile = secondBest && winSc.threatScore <= scores[secondBest].threatScore ? 'lower overall downside' : 'stronger upside potential';
 
-  let heroReason = `Based on the scenarios you mapped out, <strong>${winOpt}</strong> comes out ${confidence} ahead — it has ${riskProfile}.`;
-  if (mainGoal) heroReason += ` Given that your main goal is "<em>${escHtml(mainGoal)}</em>," this option appears better aligned with what you're trying to achieve.`;
+  let heroReason = `Based on the scenarios you mapped out, <strong>${escHtml(optNames[winner])}</strong> comes out ${confidence} ahead`;
+  if (activeOptions.length > 2) heroReason += ` across all ${activeOptions.length} options`;
+  heroReason += ` — it has ${riskProfile}.`;
+  if (mainGoal) heroReason += ` Given that your main goal is "<em>${escHtml(mainGoal)}</em>," this option appears best aligned with what you're trying to achieve.`;
   if (margin < 5) heroReason += " That said, the gap is small — so this is a genuinely close call, and other factors you haven't scored may tip it.";
 
   document.getElementById('recHero').innerHTML = `
     <div class="hero-label">Recommendation</div>
-    <div class="hero-winner">${escHtml(winOpt)}</div>
+    <div class="hero-winner">${escHtml(optNames[winner])}</div>
     <div class="hero-reason">${heroReason}</div>
   `;
 
-  document.getElementById('compareGrid').innerHTML = [['A', optA, scA], ['B', optB, scB]].map(([k, nm, sc]) => {
-    const isWin = nm === winOpt;
+  // Compare grid — max 3 columns
+  const cols = Math.min(activeOptions.length, 3);
+  const gridEl = document.getElementById('compareGrid');
+  gridEl.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+  gridEl.innerHTML = activeOptions.map(opt => {
+    const sc = scores[opt];
+    const isWin = opt === winner;
     return `<div class="compare-card ${isWin ? 'winning' : ''}">
-      <div class="cc-label">${isWin ? '→ Stronger overall' : 'Option ' + k}</div>
-      <div class="cc-name">${escHtml(nm)}</div>
+      <div class="cc-label">${isWin ? '→ Strongest overall' : 'Option ' + opt}</div>
+      <div class="cc-name">${escHtml(optNames[opt])}</div>
       <div class="cc-stat"><span class="cc-stat-label">Upsides (${sc.oppCount})</span><span class="val-pos">+${sc.oppScore}</span></div>
       <div class="cc-stat"><span class="cc-stat-label">Concerns (${sc.threatCount})</span><span class="val-neg">−${sc.threatScore}</span></div>
       <div class="cc-stat"><span class="cc-stat-label">Net score</span><span class="${sc.net >= 0 ? 'val-net-pos' : 'val-net-neg'}">${sc.net >= 0 ? '+' : ''}${sc.net}</span></div>
     </div>`;
   }).join('');
 
-  const maxBar = Math.max(scA.oppScore, scB.oppScore, scA.threatScore, scB.threatScore, 1);
-  document.getElementById('barsSection').innerHTML =
-    barRow(`${optA} — upsides`, scA.oppScore, maxBar, 'opp') +
-    barRow(`${optB} — upsides`, scB.oppScore, maxBar, 'opp') +
-    `<div style="height:12px"></div>` +
-    barRow(`${optA} — concerns`, scA.threatScore, maxBar, 'threat') +
-    barRow(`${optB} — concerns`, scB.threatScore, maxBar, 'threat');
+  // Bars
+  const maxBar = Math.max(...activeOptions.flatMap(o => [scores[o].oppScore, scores[o].threatScore]), 1);
+  let barsHtml = activeOptions.map(opt => barRow(`${optNames[opt]} — upsides`, scores[opt].oppScore, maxBar, 'opp')).join('');
+  barsHtml += `<div style="height:12px"></div>`;
+  barsHtml += activeOptions.map(opt => barRow(`${optNames[opt]} — concerns`, scores[opt].threatScore, maxBar, 'threat')).join('');
+  document.getElementById('barsSection').innerHTML = barsHtml;
 
+  // Detail section
   let detail = '';
-  ['A','B'].forEach(opt => {
-    const nm = opt === 'A' ? optA : optB;
+  activeOptions.forEach(opt => {
     const list = risks[opt];
-    detail += `<div class="opt-section-header">${escHtml(nm)}</div>`;
+    detail += `<div class="opt-section-header">${escHtml(optNames[opt])}</div>`;
     if (!list.length) {
       detail += `<div style="font-size:13px;color:var(--ink-light);margin-bottom:12px;">No scenarios recorded.</div>`;
     } else {
@@ -1126,12 +1249,16 @@ function buildReport() {
   document.getElementById('detailSection').innerHTML = detail;
 
   // Gut feeling section
-  const gutScoreA = parseInt(document.getElementById('gutSliderA').value) || 3;
-  const gutScoreB = parseInt(document.getElementById('gutSliderB').value) || 3;
-  const gutTextA = (document.getElementById('gutTextA').value || '').trim();
-  const gutTextB = (document.getElementById('gutTextB').value || '').trim();
-  const emotionsA = selectedEmotions.A;
-  const emotionsB = selectedEmotions.B;
+  const gutScores = {};
+  const gutTexts = {};
+  activeOptions.forEach(opt => {
+    gutScores[opt] = parseInt(document.getElementById('gutSlider' + opt)?.value) || 3;
+    gutTexts[opt] = (document.getElementById('gutText' + opt)?.value || '').trim();
+  });
+
+  let gutWinner = activeOptions[0];
+  activeOptions.forEach(opt => { if (gutScores[opt] > gutScores[gutWinner]) gutWinner = opt; });
+  const gutTied = activeOptions.every(o => gutScores[o] === gutScores[gutWinner]);
 
   function gutPillClass(score) {
     if (score >= 4) return 'gut-score-pos';
@@ -1139,36 +1266,34 @@ function buildReport() {
     return 'gut-score-mid';
   }
 
-  function gutBlock(opt, nm, score, emots, txt) {
+  const gutSummary = gutTied
+    ? `Your gut feeling is roughly equal across all options — the rational analysis may carry more weight here, or you may need more time to sit with it.`
+    : `Emotionally, <strong>${escHtml(optNames[gutWinner])}</strong> feels best. ${Math.abs(gutScores[gutWinner] - (gutScores[activeOptions.find(o => o !== gutWinner)] || 3)) >= 2 ? 'The difference is notable — worth paying attention to.' : 'The gap is small, so treat this as one signal among many.'}`;
+
+  const gutAligned = !gutTied && gutWinner === winner;
+  const alignNote = gutTied ? '' : gutAligned
+    ? `<p style="font-size:13px;color:var(--moss);margin-top:10px;">✦ Your gut feeling aligns with the rational analysis — both point toward <strong>${escHtml(optNames[winner])}</strong>.</p>`
+    : `<p style="font-size:13px;color:var(--amber);margin-top:10px;">⚡ Your gut feeling points toward <strong>${escHtml(optNames[gutWinner])}</strong>, while the scenario analysis favours <strong>${escHtml(optNames[winner])}</strong>. This tension is worth exploring before you decide.</p>`;
+
+  const gutBlocks = activeOptions.map(opt => {
+    const score = gutScores[opt];
+    const emots = selectedEmotions[opt];
+    const txt = gutTexts[opt];
     const tags = emots.length ? emots.map(e => `<span class="gut-emotion-tag">${escHtml(e)}</span>`).join('') : '<span style="font-size:13px;color:var(--ink-light);">No emotions selected</span>';
     const quote = txt ? `<div class="gut-text-quote">"${escHtml(txt)}"</div>` : '';
     return `<div class="gut-report-block">
       <div class="gut-report-header">
-        <span class="gut-report-name">${escHtml(nm)}</span>
+        <span class="gut-report-name">${escHtml(optNames[opt])}</span>
         <span class="gut-score-pill ${gutPillClass(score)}">${gutLabels[score]}</span>
       </div>
       <div>${tags}</div>
       ${quote}
     </div>`;
-  }
-
-  const gutWinner = gutScoreA >= gutScoreB ? optA : optB;
-  const gutTied = gutScoreA === gutScoreB;
-
-  const gutSummary = gutTied
-    ? `Your gut feeling is roughly equal for both options — which may mean the rational analysis carries more weight here, or that you need more time to sit with it.`
-    : `Emotionally, <strong>${escHtml(gutWinner)}</strong> feels better. ${Math.abs(gutScoreA - gutScoreB) >= 2 ? 'The difference is notable — worth paying attention to.' : 'The gap is small, so treat this as one signal among many.'}`;
-
-  const gutAligned = (!gutTied && gutWinner === winOpt);
-  const alignNote = gutTied ? '' : gutAligned
-    ? `<p style="font-size:13px;color:var(--moss);margin-top:10px;">✦ Your gut feeling aligns with the rational analysis — both point toward <strong>${escHtml(winOpt)}</strong>.</p>`
-    : `<p style="font-size:13px;color:var(--amber);margin-top:10px;">⚡ Your gut feeling points toward <strong>${escHtml(gutWinner)}</strong>, while the scenario analysis favours <strong>${escHtml(winOpt)}</strong>. This tension is worth exploring before you decide.</p>`;
+  }).join('');
 
   document.getElementById('gutSection').innerHTML =
     `<p style="font-size:14px;color:var(--ink-mid);line-height:1.65;margin-bottom:1rem;">${gutSummary}</p>` +
-    gutBlock('A', optA, gutScoreA, emotionsA, gutTextA) +
-    gutBlock('B', optB, gutScoreB, emotionsB, gutTextB) +
-    alignNote;
+    gutBlocks + alignNote;
 }
 
 function barRow(label, val, max, cls) {
@@ -1179,17 +1304,15 @@ function barRow(label, val, max, cls) {
   </div>`;
 }
 
+// --- AI generation ---
+
 async function generateWithAI() {
-  const decision = (document.getElementById('decisionDesc')?.value || '').trim();
-  const why = (document.getElementById('decisionWhy')?.value || '').trim();
-  const goal = (document.getElementById('mainGoal')?.value || '').trim();
-  const secondary = (document.getElementById('secondaryGoals')?.value || '').trim();
-  const optAName = (document.getElementById('optAName')?.value || '').trim();
-  const optADesc = (document.getElementById('optADesc')?.value || '').trim();
-  const optBName = (document.getElementById('optBName')?.value || '').trim();
-  const optBDesc = (document.getElementById('optBDesc')?.value || '').trim();
-  const optName = currentOpt === 'A' ? optAName : optBName;
-  const optDesc = currentOpt === 'A' ? optADesc : optBDesc;
+  const decision = v('decisionDesc');
+  const why = v('decisionWhy');
+  const goal = v('mainGoal');
+  const secondary = v('secondaryGoals');
+  const optName = v('opt' + currentOpt + 'Name');
+  const optDesc = v('opt' + currentOpt + 'Desc');
   const typeLabel = currentType === 'opportunity' ? 'opportunity (something good that could happen)' : 'threat (something bad that could happen)';
 
   const btn = document.getElementById('aiGenBtn');
@@ -1244,7 +1367,6 @@ Respond ONLY with a valid JSON object, no markdown, no explanation, exactly this
 
     document.getElementById('riskDesc').value = parsed.desc || '';
     document.getElementById('riskMit').value = parsed.mit || '';
-
     const prob = Math.min(5, Math.max(1, parseInt(parsed.prob) || 3));
     const impact = Math.min(5, Math.max(1, parseInt(parsed.impact) || 3));
     document.getElementById('riskProb').value = prob;
@@ -1263,27 +1385,20 @@ Respond ONLY with a valid JSON object, no markdown, no explanation, exactly this
 }
 
 async function generateOption(opt) {
-  const decision = (document.getElementById('decisionDesc')?.value || '').trim();
-  const why = (document.getElementById('decisionWhy')?.value || '').trim();
-  const goal = (document.getElementById('mainGoal')?.value || '').trim();
-  const secondary = (document.getElementById('secondaryGoals')?.value || '').trim();
+  const decision = v('decisionDesc');
+  const why = v('decisionWhy');
+  const goal = v('mainGoal');
+  const secondary = v('secondaryGoals');
 
-  // Read what already exists for both options
-  const existingA = (document.getElementById('optAName')?.value || '').trim();
-  const existingADesc = (document.getElementById('optADesc')?.value || '').trim();
-  const existingB = (document.getElementById('optBName')?.value || '').trim();
-  const existingBDesc = (document.getElementById('optBDesc')?.value || '').trim();
-
-  const existingOptions = [];
-  if (opt === 'B' && (existingA || existingADesc)) {
-    existingOptions.push(`Option A — "${existingA}": ${existingADesc}`);
-  }
-  if (opt === 'A' && (existingB || existingBDesc)) {
-    existingOptions.push(`Option B — "${existingB}": ${existingBDesc}`);
-  }
-  const existingStr = existingOptions.length
-    ? `Already defined options (be genuinely different and, where possible, opposite or contrasting):
-${existingOptions.join('\n')}`
+  // Pass all other active options as context
+  const others = activeOptions.filter(o => o !== opt);
+  const existingStr = others.length
+    ? `Already defined options (generate something genuinely distinct):\n` +
+      others.map(o => {
+        const nm = v('opt' + o + 'Name');
+        const desc = v('opt' + o + 'Desc');
+        return `Option ${o}${nm ? ` — "${nm}"` : ''}: ${desc || '(no description yet)'}`;
+      }).join('\n')
     : 'No other options defined yet.';
 
   const btn = document.getElementById('optAIBtn' + opt);
@@ -1291,7 +1406,7 @@ ${existingOptions.join('\n')}`
   btn.disabled = true;
   statusEl.style.display = 'flex';
 
-  const prompt = `You are helping someone think through a major life decision by defining their two options clearly.
+  const prompt = `You are helping someone think through a major life decision by defining their options clearly.
 
 Decision: ${decision}
 Why they are making it: ${why}
@@ -1302,7 +1417,7 @@ They need help defining Option ${opt}.
 
 ${existingStr}
 
-Generate ONE clear, realistic option for Option ${opt}. It should be meaningfully distinct — ideally representing a genuinely different path, not a minor variation. If another option exists, this one should contrast or be opposite to it where possible.
+Generate ONE clear, realistic option for Option ${opt}. It should be meaningfully distinct — ideally representing a genuinely different path. If other options exist, this one should contrast or complement them.
 
 Respond ONLY with a valid JSON object, no markdown, no explanation, exactly this shape:
 {
