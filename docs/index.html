@@ -596,6 +596,50 @@
     gap: 6px;
   }
 
+  /* AI batch panel (Step 2) */
+  .ai-batch-panel {
+    background: linear-gradient(135deg, rgba(61,90,71,0.07), rgba(42,74,107,0.05));
+    border: 1.5px solid var(--moss);
+    border-radius: var(--radius);
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1.75rem;
+  }
+  .ai-batch-header {
+    font-size: 13px; font-weight: 500; color: var(--moss); margin-bottom: 3px;
+  }
+  .ai-batch-sub {
+    font-size: 12px; color: var(--ink-light); margin-bottom: 1rem; line-height: 1.5;
+  }
+  .ai-batch-controls {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  }
+  .stepper-label { font-size: 13px; color: var(--ink-mid); }
+  .stepper {
+    display: flex; align-items: center; border: 1.5px solid var(--sand-dark);
+    border-radius: var(--radius-sm); overflow: hidden;
+  }
+  .stepper-btn {
+    width: 30px; height: 30px; border: none; background: var(--sand); color: var(--ink-mid);
+    font-size: 17px; cursor: pointer; font-family: 'DM Sans', sans-serif; line-height: 1;
+    transition: background 0.15s; display: flex; align-items: center; justify-content: center;
+  }
+  .stepper-btn:hover { background: var(--sand-dark); }
+  .stepper-val {
+    width: 30px; text-align: center; font-size: 15px; font-weight: 500;
+    color: var(--ink); font-family: 'Lora', serif; pointer-events: none;
+  }
+
+  /* AI assess banner (Step 3) */
+  .ai-assess-banner {
+    background: linear-gradient(135deg, rgba(61,90,71,0.07), rgba(42,74,107,0.05));
+    border: 1.5px solid var(--moss);
+    border-radius: var(--radius);
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  .ai-assess-header { font-size: 13px; font-weight: 500; color: var(--moss); margin-bottom: 3px; }
+  .ai-assess-sub { font-size: 12px; color: var(--ink-light); margin-bottom: 1rem; line-height: 1.5; }
+
   @media print {
     body { background: white; padding: 0; }
     .app-header, .progress-bar, .prog-line, #step1, #step2, #step3, #step4, .btn-row { display: none !important; }
@@ -676,6 +720,24 @@
     <div class="panel">
       <h1 class="panel-title">What are your options?</h1>
       <p class="panel-sub">Give each a short name you'll recognize, and briefly describe what it actually means for your life.</p>
+
+      <!-- AI bulk option generation -->
+      <div class="ai-batch-panel">
+        <div class="ai-batch-header">&#10022; Generate all options at once with AI</div>
+        <div class="ai-batch-sub">Not sure where to start? Let AI propose a full set of distinct options based on your decision — then edit them to fit.</div>
+        <div class="ai-batch-controls">
+          <span class="stepper-label">How many?</span>
+          <div class="stepper">
+            <button class="stepper-btn" onclick="adjustBatchCount(-1)">&#8722;</button>
+            <span class="stepper-val" id="batchCountDisplay">2</span>
+            <button class="stepper-btn" onclick="adjustBatchCount(1)">&#43;</button>
+          </div>
+          <button class="btn btn-ai" id="genAllOptsBtn" onclick="generateAllOptionsAI()">&#10022; Generate 2 options</button>
+        </div>
+        <div id="batchOptsStatus" style="display:none; margin-top:10px; font-size:13px; color:var(--ink-light); align-items:center; gap:8px;">
+          <span class="ai-spinner"></span><span id="batchOptsStatusText">Generating options&hellip;</span>
+        </div>
+      </div>
 
       <div class="field">
         <label class="field-label">Option A — short name</label>
@@ -773,6 +835,14 @@
     <div class="panel">
       <h1 class="panel-title">What could happen?</h1>
       <p class="panel-sub" id="step3Sub">Think through each option. What could go right, and what could go wrong?</p>
+
+      <!-- AI bulk scenario generation -->
+      <div class="ai-assess-banner">
+        <div class="ai-assess-header">&#10022; Help me assess — fully automated</div>
+        <div class="ai-assess-sub">AI will generate upsides and concerns for every option at once — 3 upsides and 2 concerns each. Review and delete any that don't fit.</div>
+        <button class="btn btn-ai" id="aiAssessBtn" onclick="generateAllScenariosAI()">&#10022; Generate for all options</button>
+        <div id="aiAssessStatus" style="display:none; margin-top:12px;"></div>
+      </div>
 
       <div class="opt-tabs" id="optTabsContainer"></div>
 
@@ -932,6 +1002,7 @@
 let currentStep = 1;
 let currentOpt = 'A';
 let currentType = 'opportunity';
+let batchOptCount = 2;
 
 const OPTION_LETTERS = ['A', 'B', 'C', 'D', 'E'];
 let activeOptions = ['A', 'B'];
@@ -1449,6 +1520,176 @@ Respond ONLY with a valid JSON object, no markdown, no explanation, exactly this
     btn.disabled = false;
     statusEl.style.display = 'none';
   }
+}
+
+// --- Batch option generation (Step 2) ---
+
+function adjustBatchCount(delta) {
+  batchOptCount = Math.min(5, Math.max(2, batchOptCount + delta));
+  document.getElementById('batchCountDisplay').textContent = batchOptCount;
+  document.getElementById('genAllOptsBtn').textContent = '\u2736 Generate ' + batchOptCount + ' options';
+}
+
+async function generateAllOptionsAI() {
+  const decision = v('decisionDesc');
+  const why = v('decisionWhy');
+  const goal = v('mainGoal');
+  const secondary = v('secondaryGoals');
+  const n = batchOptCount;
+
+  const btn = document.getElementById('genAllOptsBtn');
+  const statusEl = document.getElementById('batchOptsStatus');
+  const statusText = document.getElementById('batchOptsStatusText');
+  btn.disabled = true;
+  statusEl.style.display = 'flex';
+  statusText.textContent = 'Generating ' + n + ' options\u2026';
+
+  const prompt = `You are helping someone think through a major life decision by generating distinct options.
+
+Decision: ${decision}
+Why they are making it: ${why}
+Main goal: ${goal}
+Secondary goals: ${secondary}
+
+Generate exactly ${n} distinct, realistic options for this decision. Each should represent a meaningfully different path — avoid options that are too similar to each other. Cover different risk levels, timelines, or trade-offs where possible.
+
+Respond ONLY with a valid JSON array, no markdown, no explanation, exactly this shape:
+[
+  { "name": "Short 2-5 word label", "desc": "2-3 sentence description of what this option means in practice for this person" }
+]`;
+
+  try {
+    const response = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const data = await response.json();
+    if (data.error) throw new Error(data.error.message || data.error);
+    const raw = data.content?.[0]?.text || '';
+    const parsed = JSON.parse(raw.replace(/```json|```/g, '').trim());
+
+    // Activate the right number of options
+    activeOptions = OPTION_LETTERS.slice(0, n);
+    OPTION_LETTERS.slice(2, n).forEach(opt => {
+      document.getElementById('optBlock' + opt).style.display = '';
+    });
+    OPTION_LETTERS.slice(n).forEach(opt => {
+      const el = document.getElementById('optBlock' + opt);
+      if (el) el.style.display = 'none';
+    });
+    updateManageBtns();
+
+    // Fill fields
+    parsed.slice(0, n).forEach((item, i) => {
+      const opt = OPTION_LETTERS[i];
+      const nameEl = document.getElementById('opt' + opt + 'Name');
+      const descEl = document.getElementById('opt' + opt + 'Desc');
+      if (nameEl) nameEl.value = item.name || '';
+      if (descEl) descEl.value = item.desc || '';
+    });
+
+    statusText.textContent = n + ' options generated \u2014 review and adjust as needed.';
+    setTimeout(() => { statusEl.style.display = 'none'; }, 3500);
+  } catch (e) {
+    statusText.textContent = 'Something went wrong. Try again or write your own.';
+    setTimeout(() => { statusEl.style.display = 'none'; }, 3500);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+// --- Bulk scenario generation (Step 3) ---
+
+async function generateAllScenariosAI() {
+  const decision = v('decisionDesc');
+  const why = v('decisionWhy');
+  const goal = v('mainGoal');
+  const secondary = v('secondaryGoals');
+
+  const btn = document.getElementById('aiAssessBtn');
+  const statusEl = document.getElementById('aiAssessStatus');
+  btn.disabled = true;
+  statusEl.style.display = 'block';
+  statusEl.innerHTML = activeOptions.map(opt =>
+    `<div id="assessStatus${opt}" style="font-size:13px;color:var(--ink-light);display:flex;align-items:center;gap:6px;margin-bottom:6px;">` +
+    `<span class="ai-spinner"></span><span>Generating for Option ${opt}&#8230;</span></div>`
+  ).join('');
+
+  const processOption = async (opt) => {
+    const optName = v('opt' + opt + 'Name') || 'Option ' + opt;
+    const optDesc = v('opt' + opt + 'Desc') || '';
+
+    const prompt = `You are helping someone think through a major life decision using scenario analysis.
+
+Decision: ${decision}
+Why they are making it: ${why}
+Main goal: ${goal}
+Secondary goals: ${secondary}
+
+They are evaluating Option ${opt} — "${optName}": ${optDesc}
+
+Generate 3 realistic, distinct upsides (opportunities) and 2 realistic concerns (threats) for this option. Be specific and grounded in the person's actual situation. Cover different dimensions: financial, personal, relational, career, health, time.
+
+Respond ONLY with a valid JSON object, no markdown, no explanation:
+{
+  "opportunities": [
+    { "desc": "...", "prob": <1-5>, "impact": <1-5>, "mit": "..." },
+    { "desc": "...", "prob": <1-5>, "impact": <1-5>, "mit": "..." },
+    { "desc": "...", "prob": <1-5>, "impact": <1-5>, "mit": "..." }
+  ],
+  "threats": [
+    { "desc": "...", "prob": <1-5>, "impact": <1-5>, "mit": "..." },
+    { "desc": "...", "prob": <1-5>, "impact": <1-5>, "mit": "..." }
+  ]
+}`;
+
+    const response = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1200,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const data = await response.json();
+    if (data.error) throw new Error(data.error.message || data.error);
+    const raw = data.content?.[0]?.text || '';
+    return JSON.parse(raw.replace(/```json|```/g, '').trim());
+  };
+
+  await Promise.allSettled(activeOptions.map(async (opt) => {
+    const statusDiv = document.getElementById('assessStatus' + opt);
+    try {
+      const result = await processOption(opt);
+      const clamp = (n) => Math.min(5, Math.max(1, parseInt(n) || 3));
+      (result.opportunities || []).forEach(item => {
+        risks[opt].push({ desc: item.desc, type: 'opportunity', prob: clamp(item.prob), impact: clamp(item.impact), mit: item.mit || '' });
+      });
+      (result.threats || []).forEach(item => {
+        risks[opt].push({ desc: item.desc, type: 'threat', prob: clamp(item.prob), impact: clamp(item.impact), mit: item.mit || '' });
+      });
+      renderList(opt);
+      const oppN = (result.opportunities || []).length;
+      const thrN = (result.threats || []).length;
+      if (statusDiv) statusDiv.innerHTML =
+        `<span style="color:var(--moss);">&#10022;</span><span style="color:var(--ink-mid);">Option ${opt}: ${oppN} upside${oppN !== 1 ? 's' : ''}, ${thrN} concern${thrN !== 1 ? 's' : ''} added.</span>`;
+    } catch (e) {
+      if (statusDiv) statusDiv.innerHTML =
+        `<span style="color:var(--rust);">&#10006;</span><span style="color:var(--rust);">Option ${opt} failed \u2014 try generating individually.</span>`;
+    }
+  }));
+
+  btn.disabled = false;
+  setTimeout(() => {
+    statusEl.style.display = 'none';
+    statusEl.innerHTML = '';
+  }, 5000);
 }
 
 function printReport() {
